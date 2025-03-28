@@ -1,7 +1,6 @@
-import { Injectable, InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 
 import { TokenService } from 'src/shared/services/token.service'
-import { isUniqueConstraintPrismaError } from 'src/shared/helper'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { HashingService } from 'src/shared/services/hashing.service'
 
@@ -18,33 +17,33 @@ export class AuthService {
   ) {}
 
   async register(body: RegisterBodyDto) {
-    try {
-      const clientRoleId = await this.rolesService.getClientRoleId()
-      const hashedPassword = await this.hashingService.hash(body.password)
+    // try {
+    const clientRoleId = await this.rolesService.getClientRoleId()
+    const hashedPassword = await this.hashingService.hash(body.password)
 
-      const user = await this.prismaService.user.create({
-        data: {
-          email: body.email,
-          password: hashedPassword,
-          name: body.name,
-          phoneNumber: body.phoneNumber,
-          roleId: clientRoleId,
-        },
-        omit: {
-          password: true,
-          totpSecret: true,
-        },
-      })
+    const user = await this.prismaService.user.create({
+      data: {
+        email: body.email,
+        password: hashedPassword,
+        name: body.name,
+        phoneNumber: body.phoneNumber,
+        roleId: clientRoleId,
+      },
+      omit: {
+        password: true,
+        totpSecret: true,
+      },
+    })
 
-      return user
-    } catch (error) {
-      if (isUniqueConstraintPrismaError(error)) {
-        throw new UnprocessableEntityException({
-          message: 'Error occurred',
-          errors: [{ message: 'Email already exists', path: 'email' }],
-        })
-      }
-      throw new InternalServerErrorException()
-    }
+    return user
+    // } catch (error) {
+    //   if (isUniqueConstraintPrismaError(error)) {
+    //     throw new UnprocessableEntityException({
+    //       message: 'Error occurred',
+    //       errors: [{ message: 'Email already exists', path: 'email' }],
+    //     })
+    //   }
+    //   throw new InternalServerErrorException()
+    // }
   }
 }

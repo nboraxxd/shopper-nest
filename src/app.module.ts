@@ -7,8 +7,9 @@ import { SharedModule } from 'src/shared/shared.module'
 import { AppService } from './app.service'
 import { AppController } from './app.controller'
 import { AuthModule } from './routes/auth/auth.module'
-import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
+import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filter'
+import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
 
 @Module({
   imports: [SharedModule, AuthModule],
@@ -21,6 +22,7 @@ import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
     },
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_FILTER, useClass: CatchEverythingFilter },
   ],
 })
 export class AppModule {}
