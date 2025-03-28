@@ -21,15 +21,22 @@ const envSchema = z.object({
   ACCESS_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
   SECRET_API_KEY: z.string(),
+
+  ADMIN_NAME: z.string(),
+  ADMIN_PASSWORD: z.string(),
+  ADMIN_EMAIL: z.string(),
+  ADMIN_PHONE_NUMBER: z.string(),
 })
 
-const envConfig = envSchema.safeParse(process.env)
+const configServer = envSchema.safeParse(process.env)
 
-if (!envConfig.success) {
+if (!configServer.success) {
   console.error('Invalid configuration. Please check your .env file.')
 
-  console.error(envConfig.error)
+  console.error(configServer.error)
   process.exit(1)
 }
 
-export default envConfig.data
+const envConfig = configServer.data
+
+export default envConfig
