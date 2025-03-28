@@ -1,10 +1,28 @@
 import { z } from 'zod'
 import { createZodDto } from 'nestjs-zod'
+import { UserStatus } from '@prisma/client'
 
 import { emailSchema, nameSchema, passwordSchema, phoneNumberSchema } from 'src/shared/shared.dto'
 
-// Định nghĩa schema cho request body
-const registerBodySchema = z
+const UserSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  name: z.string(),
+  phoneNumber: z.string(),
+  avatar: z.string().nullable(),
+  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BLOCKED]),
+  roleId: z.number(),
+
+  createdById: z.number().nullable(),
+  updatedById: z.number().nullable(),
+  deletedAt: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export class UserDto extends createZodDto(UserSchema) {}
+
+const RegisterBodySchema = z
   .object({
     name: nameSchema,
     email: emailSchema,
@@ -25,5 +43,6 @@ const registerBodySchema = z
     }
   })
 
-// Tạo DTO từ schema
-export class RegisterBodyDto extends createZodDto(registerBodySchema) {}
+export class RegisterBodyDto extends createZodDto(RegisterBodySchema) {}
+
+export class RegisterResDto extends createZodDto(UserSchema) {}

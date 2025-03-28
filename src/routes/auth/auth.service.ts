@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import { Injectable, InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common'
 
 import { TokenService } from 'src/shared/services/token.service'
 import { isUniqueConstraintPrismaError } from 'src/shared/helper'
@@ -39,7 +39,10 @@ export class AuthService {
       return user
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw new Error('Email đã tồn tại')
+        throw new UnprocessableEntityException({
+          message: 'Error occurred',
+          errors: [{ message: 'Email already exists', path: 'email' }],
+        })
       }
       throw new InternalServerErrorException()
     }
