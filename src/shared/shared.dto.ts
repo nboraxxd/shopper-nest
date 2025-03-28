@@ -1,6 +1,10 @@
 import { z } from 'zod'
 
-export const nameSchema = z.string().trim().min(1, { message: 'Name is required' })
+export const nameSchema = z
+  .string()
+  .trim()
+  .min(1, { message: 'Name is required' })
+  .max(100, { message: 'Name is too long' })
 
 export const emailSchema = z.string({ required_error: 'Email is required' }).trim().email({ message: 'Invalid email' })
 
@@ -12,6 +16,7 @@ export const phoneNumberSchema = z
 export const passwordSchema = z
   .string({ required_error: 'Password is required' })
   .min(6, { message: 'Password must be at least 6 characters' })
+  .max(100, { message: 'Password must be at most 100 characters' })
 
 export class SuccessResDTO<T> {
   data: T
