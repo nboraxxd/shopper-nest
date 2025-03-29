@@ -9,8 +9,10 @@ import { RegisterBody, RegisterDataRes, VerificationCode } from 'src/routes/auth
 export class AuthRepesitory {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createUser(user: Omit<RegisterBody, 'confirmPassword'> & Pick<User, 'roleId'>): Promise<RegisterDataRes> {
-    const { email, name, password, phoneNumber, roleId } = user
+  async createUser(
+    user: Omit<RegisterBody, 'confirmPassword' | 'code'> & Pick<User, 'roleId' | 'status'>
+  ): Promise<RegisterDataRes> {
+    const { email, name, password, phoneNumber, roleId, status } = user
 
     return this.prismaService.user.create({
       data: {
@@ -19,6 +21,7 @@ export class AuthRepesitory {
         name,
         phoneNumber,
         roleId,
+        status,
       },
       omit: {
         password: true,
@@ -30,7 +33,7 @@ export class AuthRepesitory {
     })
   }
 
-  async createVerificationCode(
+  async upsertVerificationCode(
     payload: Pick<VerificationCode, 'email' | 'type' | 'code' | 'expiresAt'>
   ): Promise<void> {
     const { email, code, expiresAt } = payload
@@ -42,5 +45,20 @@ export class AuthRepesitory {
     })
 
     console.log('🔥 ~ AuthRepesitory ~ createVerificationCode ~ OTP:', result)
+  }
+
+  findUniqueVerificationCode(
+    where:
+      | Pick<VerificationCode, 'email'>
+      | Pick<VerificationCode, 'id'>
+      | Pick<VerificationCode, 'code' | 'email' | 'type'>
+  ): Promise<VerificationCode | null> {
+    return this.prismaService.verificationCode.findUnique({ where })
+  }
+
+  async deleteVerificationCode(
+    where: Pick<VerificationCode, 'id'> | Pick<VerificationCode, 'email' | 'code' | 'type'>
+  ): Promise<void> {
+    await this.prismaService.verificationCode.delete({ where })
   }
 }

@@ -1,10 +1,11 @@
 import ms from 'ms'
 import { addMilliseconds } from 'date-fns'
-import { Injectable, InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common'
+import { Injectable, UnprocessableEntityException } from '@nestjs/common'
 
 import envConfig from 'src/shared/env-config'
 import { TokenService } from 'src/shared/services/token.service'
 import { HashingService } from 'src/shared/services/hashing.service'
+import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
 import { generateOTP, isUniqueConstraintPrismaError } from 'src/shared/helper'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 
@@ -19,21 +20,45 @@ export class AuthService {
     private readonly hashingService: HashingService,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
-    private readonly authRepesitory: AuthRepesitory
+    private readonly authRepository: AuthRepesitory
   ) {}
 
-  async register({ email, name, password, phoneNumber }: RegisterBody): Promise<RegisterDataRes> {
+  async register({ email, name, password, phoneNumber, code }: RegisterBody): Promise<RegisterDataRes> {
     try {
+      const verificationCode = await this.authRepository.findUniqueVerificationCode({
+        email,
+        code,
+        type: TypeOfVerificationCode.REGISTER,
+      })
+
+      if (!verificationCode) {
+        throw new UnprocessableEntityException({
+          message: 'Error occurred',
+          errors: [{ message: 'Invalid code', path: 'code' }],
+        })
+      }
+
+      if (verificationCode.expiresAt < new Date()) {
+        throw new UnprocessableEntityException({
+          message: 'Error occurred',
+          errors: [{ message: 'Code has expired', path: 'code' }],
+        })
+      }
+
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(password)
 
-      const user = await this.authRepesitory.createUser({
-        email,
-        name,
-        password: hashedPassword,
-        phoneNumber,
-        roleId: clientRoleId,
-      })
+      const [user] = await Promise.all([
+        this.authRepository.createUser({
+          email,
+          name,
+          password: hashedPassword,
+          phoneNumber,
+          roleId: clientRoleId,
+          status: UserStatus.ACTIVE,
+        }),
+        this.authRepository.deleteVerificationCode({ email, code, type: TypeOfVerificationCode.REGISTER }),
+      ])
 
       return user
     } catch (error) {
@@ -43,7 +68,7 @@ export class AuthService {
           errors: [{ message: 'Email already exists', path: 'email' }],
         })
       }
-      throw new InternalServerErrorException()
+      throw error
     }
   }
 
@@ -64,7 +89,7 @@ export class AuthService {
 
     const code = generateOTP()
 
-    await this.authRepesitory.createVerificationCode({
+    await this.authRepository.upsertVerificationCode({
       email,
       code,
       type,

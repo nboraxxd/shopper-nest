@@ -18,8 +18,8 @@ export class AuthController {
   }
 
   @Post('otp')
-  @HttpCode(200)
   @ZodSerializerDto(MessageResDto)
+  @HttpCode(200)
   async sendOtp(@Body() body: SendOtpBodyDto): Promise<MessageResDto> {
     await this.authService.sendOTP(body)
 

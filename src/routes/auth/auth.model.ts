@@ -1,13 +1,13 @@
 import { z } from 'zod'
 
-import { emailSchema } from 'src/shared/models/common.model'
 import { UserSchema } from 'src/shared/models/shared-user.model'
+import { codeSchema, emailSchema } from 'src/shared/models/common.model'
 import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
 
 export const VerificationCodeSchema = z.object({
   id: z.number(),
   email: emailSchema,
-  code: z.string().length(6),
+  code: codeSchema,
   type: z.enum([TypeOfVerificationCode.REGISTER, TypeOfVerificationCode.FORGOT_PASSWORD]),
   expiresAt: z.date(),
   createdAt: z.date(),
@@ -25,6 +25,7 @@ export const RegisterBodySchema = UserSchema.pick({
     confirmPassword: z
       .string({ required_error: 'confirmPassword is required' })
       .min(6, { message: 'confirmPassword must be at least 6 characters' }),
+    code: codeSchema,
   })
   .strict({ message: 'Additional properties not allowed' })
   .superRefine(({ confirmPassword, password }, ctx) => {
