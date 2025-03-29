@@ -103,7 +103,7 @@ export class AuthService {
         await this.mailingService.sendOTP({
           to: email,
           code: code,
-          subject: 'OTP code',
+          subject: `${code} là mã xác minh của bạn`,
         })
       })().catch(() => {})
     })
