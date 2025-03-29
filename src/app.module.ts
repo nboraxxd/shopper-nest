@@ -9,6 +9,7 @@ import { AppController } from './app.controller'
 import { AuthModule } from './routes/auth/auth.module'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
+import { TransformInterceptor } from 'src/shared/interceptor/transform.interceptor'
 
 @Module({
   imports: [SharedModule, AuthModule],
@@ -19,6 +20,7 @@ import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe
       provide: APP_PIPE,
       useClass: CustomZodValidationPipe,
     },
+    { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],

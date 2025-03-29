@@ -18,6 +18,10 @@ const envSchema = z.object({
   PORT: z.coerce.number().int(),
   ACCESS_TOKEN_EXPIRES_IN: z.string(),
   REFRESH_TOKEN_EXPIRES_IN: z.string(),
+
+  // mình muốn check nó phải có dạng ms.StringValue
+  OTP_EXPIRES_IN: z.string().regex(/^[0-9]+(s|m|h|d|w|y)$/),
+
   ACCESS_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
   SECRET_API_KEY: z.string(),
