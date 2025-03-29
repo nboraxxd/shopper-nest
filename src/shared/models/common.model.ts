@@ -27,3 +27,5 @@ export const passwordSchema = z
 export const codeSchema = z.string().length(6, { message: 'Code must be 6 characters' })
 
 export const MessageResSchema = z.object({ message: z.string() })
+
+export type MessageRes = z.infer<typeof MessageResSchema>

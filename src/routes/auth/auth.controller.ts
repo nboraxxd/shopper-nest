@@ -3,7 +3,7 @@ import { Body, Controller, HttpCode, Post } from '@nestjs/common'
 
 import { MessageResDto } from 'src/shared/shared.dto'
 import { AuthService } from 'src/routes/auth/auth.service'
-import { RegisterBodyDto, RegisterResDto, SendOtpBodyDto } from 'src/routes/auth/auth.dto'
+import { RegisterBodyDto, RegisterResDto, SendOTPBodyDto } from 'src/routes/auth/auth.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -20,9 +20,9 @@ export class AuthController {
   @Post('otp')
   @ZodSerializerDto(MessageResDto)
   @HttpCode(200)
-  async sendOtp(@Body() body: SendOtpBodyDto): Promise<MessageResDto> {
+  async sendOTP(@Body() body: SendOTPBodyDto): Promise<MessageResDto> {
     await this.authService.sendOTP(body)
 
-    return { message: 'OTP code has been sent' }
+    return { message: 'Please check your email for the OTP code' }
   }
 }

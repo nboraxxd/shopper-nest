@@ -11,4 +11,4 @@ export class RegisterBodyDto extends createZodDto(RegisterBodySchema) {}
 
 export class RegisterResDto extends createZodDto(generateSuccessResSchema(RegisterDataResSchema)) {}
 
-export class SendOtpBodyDto extends createZodDto(SendOTPBodySchema) {}
+export class SendOTPBodyDto extends createZodDto(SendOTPBodySchema) {}

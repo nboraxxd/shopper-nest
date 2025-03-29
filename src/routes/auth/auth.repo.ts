@@ -38,13 +38,11 @@ export class AuthRepesitory {
   ): Promise<void> {
     const { email, code, expiresAt } = payload
 
-    const result = await this.prismaService.verificationCode.upsert({
+    await this.prismaService.verificationCode.upsert({
       where: { email },
       create: payload,
       update: { code, expiresAt },
     })
-
-    console.log('🔥 ~ AuthRepesitory ~ createVerificationCode ~ OTP:', result)
   }
 
   findUniqueVerificationCode(

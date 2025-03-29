@@ -4,10 +4,11 @@ import { Injectable, UnprocessableEntityException } from '@nestjs/common'
 
 import envConfig from 'src/shared/env-config'
 import { TokenService } from 'src/shared/services/token.service'
+import { MailingService } from 'src/shared/services/mailing.service'
 import { HashingService } from 'src/shared/services/hashing.service'
-import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
 import { generateOTP, isUniqueConstraintPrismaError } from 'src/shared/helper'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
+import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
 
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { RolesService } from 'src/routes/auth/roles.service'
@@ -17,6 +18,7 @@ import { RegisterBody, RegisterDataRes, SendOTPBody } from 'src/routes/auth/auth
 export class AuthService {
   constructor(
     private readonly sharedUserRepository: SharedUserRepository,
+    private readonly mailingService: MailingService,
     private readonly hashingService: HashingService,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
@@ -87,13 +89,23 @@ export class AuthService {
       })
     }
 
-    const code = generateOTP()
+    setImmediate(() => {
+      ;(async () => {
+        const code = generateOTP()
 
-    await this.authRepository.upsertVerificationCode({
-      email,
-      code,
-      type,
-      expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN as ms.StringValue)),
+        await this.authRepository.upsertVerificationCode({
+          email,
+          code,
+          type,
+          expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN as ms.StringValue)),
+        })
+
+        await this.mailingService.sendOTP({
+          to: email,
+          code: code,
+          subject: 'OTP code',
+        })
+      })().catch(() => {})
     })
   }
 }
