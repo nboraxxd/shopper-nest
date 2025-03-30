@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { UserStatus } from 'src/shared/constants/auth.constant'
 import { emailSchema, nameSchema, passwordSchema, phoneNumberSchema } from 'src/shared/models/common.model'
 
-export const UserSchema = z.object({
+export const UserModelSchema = z.object({
   id: z.number(),
   name: nameSchema,
   email: emailSchema,
@@ -21,4 +21,4 @@ export const UserSchema = z.object({
   updatedAt: z.date(),
 })
 
-export type User = z.infer<typeof UserSchema>
+export type UserModel = z.infer<typeof UserModelSchema>

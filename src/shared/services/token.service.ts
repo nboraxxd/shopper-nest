@@ -6,15 +6,20 @@ import { v7 as uuidv7 } from 'uuid'
 import isUndefined from 'lodash/isUndefined'
 
 import envConfig from 'src/shared/env-config'
-import { TokenPayload } from 'src/shared/types/jwt.type'
+import {
+  AccessTokenPayloadSign,
+  RefreshTokenPayloadSign,
+  RefreshTokenPayload,
+  AccessTokenPayload,
+} from 'src/shared/types/jwt.type'
 
 @Injectable()
 export class TokenService {
   constructor(private readonly jwtService: JwtService) {}
 
-  signAccessToken(payload: { userId: number }) {
+  signAccessToken({ deviceId, roleId, roleName, userId }: AccessTokenPayloadSign) {
     return this.jwtService.signAsync(
-      { ...payload, _id: uuidv7() },
+      { deviceId, roleId, roleName, userId, id: uuidv7() },
       {
         algorithm: 'HS256',
         secret: envConfig.ACCESS_TOKEN_SECRET,
@@ -23,32 +28,32 @@ export class TokenService {
     )
   }
 
-  signRefreshToken(payload: { userId: number; exp?: number }) {
+  signRefreshToken({ userId, exp }: RefreshTokenPayloadSign) {
     return this.jwtService.signAsync(
-      omitBy({ ...payload, _id: uuidv7() }, isUndefined),
+      omitBy({ userId, exp, id: uuidv7() }, isUndefined),
       omitBy(
         {
           algorithm: 'HS256',
           secret: envConfig.REFRESH_TOKEN_SECRET,
-          expiresIn: !payload.exp ? envConfig.REFRESH_TOKEN_EXPIRES_IN : undefined,
+          expiresIn: !exp ? envConfig.REFRESH_TOKEN_EXPIRES_IN : undefined,
         },
         isUndefined
       )
     )
   }
 
-  decodeToken(token: string): TokenPayload {
-    return this.jwtService.decode(token)
+  decodeToken<T extends RefreshTokenPayload | AccessTokenPayload>(token: string) {
+    return this.jwtService.decode<T>(token)
   }
 
-  verifyAccessToken(token: string): Promise<TokenPayload> {
-    return this.jwtService.verifyAsync(token, {
+  verifyAccessToken(token: string) {
+    return this.jwtService.verifyAsync<AccessTokenPayload>(token, {
       secret: envConfig.ACCESS_TOKEN_SECRET,
     })
   }
 
-  verifyRefreshToken(token: string): Promise<TokenPayload> {
-    return this.jwtService.verifyAsync(token, {
+  verifyRefreshToken(token: string) {
+    return this.jwtService.verifyAsync<RefreshTokenPayload>(token, {
       secret: envConfig.REFRESH_TOKEN_SECRET,
     })
   }

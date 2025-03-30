@@ -1,8 +1,9 @@
 import ms from 'ms'
 import { addMilliseconds } from 'date-fns'
-import { Injectable, UnprocessableEntityException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 
 import envConfig from 'src/shared/env-config'
+import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -12,7 +13,7 @@ import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/auth.co
 
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { RolesService } from 'src/routes/auth/roles.service'
-import { RegisterBody, RegisterDataRes, SendOTPBody } from 'src/routes/auth/auth.model'
+import { LoginBody, LoginDataRes, RegisterBody, RegisterDataRes, SendOTPBody } from 'src/routes/auth/auth.model'
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,33 @@ export class AuthService {
     private readonly rolesService: RolesService,
     private readonly authRepository: AuthRepesitory
   ) {}
+
+  async generateTokens({ deviceId, roleId, roleName, userId }: AccessTokenPayloadSign) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.signAccessToken({ deviceId, roleId, roleName, userId }),
+      this.tokenService.signRefreshToken({ userId }),
+    ])
+
+    return { accessToken, refreshToken }
+  }
+
+  async saveRefreshToken(token: string, deviceId: number) {
+    const { exp, userId } = this.tokenService.decodeToken<RefreshTokenPayload>(token)
+
+    try {
+      await this.authRepository.insertRefreshToken({
+        userId,
+        token: token,
+        expiresAt: new Date(exp * 1000),
+        deviceId,
+      })
+    } catch (error) {
+      if (isUniqueConstraintPrismaError(error)) {
+        throw new UnauthorizedException('Duplicate refresh token')
+      }
+      throw error
+    }
+  }
 
   async register({ email, name, password, phoneNumber, code }: RegisterBody): Promise<RegisterDataRes> {
     try {
@@ -51,7 +79,7 @@ export class AuthService {
       const hashedPassword = await this.hashingService.hash(password)
 
       const [user] = await Promise.all([
-        this.authRepository.createUser({
+        this.authRepository.insertUser({
           email,
           name,
           password: hashedPassword,
@@ -107,5 +135,40 @@ export class AuthService {
         })
       })().catch(() => {})
     })
+  }
+
+  async login(payload: LoginBody & { userAgent: string; ip: string }): Promise<LoginDataRes> {
+    const user = await this.authRepository.findUniqueUserIncludeRole({ email: payload.email })
+    if (!user) {
+      throw new UnprocessableEntityException({
+        message: 'Error occurred',
+        errors: [{ message: 'Email or password is incorrect', path: 'email' }],
+      })
+    }
+
+    const isPasswordValid = await this.hashingService.compare(payload.password, user.password)
+    if (!isPasswordValid) {
+      throw new UnprocessableEntityException({
+        message: 'Error occurred',
+        errors: [{ message: 'Email or password is incorrect', path: 'email' }],
+      })
+    }
+
+    const device = await this.authRepository.insertDevice({
+      userId: user.id,
+      ip: payload.ip,
+      userAgent: payload.userAgent,
+    })
+
+    const tokens = await this.generateTokens({
+      deviceId: device.id,
+      roleId: user.roleId,
+      roleName: user.role.name,
+      userId: user.id,
+    })
+
+    await this.saveRefreshToken(tokens.refreshToken, device.id)
+
+    return tokens
   }
 }

@@ -1,16 +1,23 @@
 import { Injectable } from '@nestjs/common'
 
-import { User } from 'src/shared/models/shared-user.model'
+import { UserModel } from 'src/shared/models/shared-user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
-import { RegisterBody, RegisterDataRes, VerificationCode } from 'src/routes/auth/auth.model'
+import {
+  DeviceModel,
+  RefreshTokenModel,
+  RegisterBody,
+  RegisterDataRes,
+  RoleModel,
+  VerificationCode,
+} from 'src/routes/auth/auth.model'
 
 @Injectable()
 export class AuthRepesitory {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createUser(
-    user: Omit<RegisterBody, 'confirmPassword' | 'code'> & Pick<User, 'roleId' | 'status'>
+  async insertUser(
+    user: Omit<RegisterBody, 'confirmPassword' | 'code'> & Pick<UserModel, 'roleId' | 'status'>
   ): Promise<RegisterDataRes> {
     const { email, name, password, phoneNumber, roleId, status } = user
 
@@ -31,6 +38,12 @@ export class AuthRepesitory {
         deletedAt: true,
       },
     })
+  }
+
+  async findUniqueUserIncludeRole(
+    where: Pick<UserModel, 'id'> | Pick<UserModel, 'email'>
+  ): Promise<(UserModel & { role: RoleModel }) | null> {
+    return this.prismaService.user.findUnique({ where, include: { role: true } })
   }
 
   async upsertVerificationCode(
@@ -58,5 +71,34 @@ export class AuthRepesitory {
     where: Pick<VerificationCode, 'id'> | Pick<VerificationCode, 'email' | 'code' | 'type'>
   ): Promise<void> {
     await this.prismaService.verificationCode.delete({ where })
+  }
+
+  insertDevice(
+    payload: Pick<DeviceModel, 'userId' | 'ip' | 'userAgent'> & Partial<Pick<DeviceModel, 'isActive' | 'lastActive'>>
+  ): Promise<DeviceModel> {
+    const { ip, userAgent, userId, isActive, lastActive } = payload
+
+    return this.prismaService.device.create({
+      data: {
+        ip,
+        userAgent,
+        userId,
+        isActive: isActive ?? true,
+        lastActive: lastActive ?? new Date(),
+      },
+    })
+  }
+
+  async insertRefreshToken(payload: Omit<RefreshTokenModel, 'createdAt'>): Promise<void> {
+    const { expiresAt, deviceId, token, userId } = payload
+
+    await this.prismaService.refreshToken.create({
+      data: {
+        token,
+        userId,
+        expiresAt,
+        deviceId,
+      },
+    })
   }
 }
