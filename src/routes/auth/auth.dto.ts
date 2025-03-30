@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 
+import { generateSuccessResSchema } from 'src/shared/helper'
 import { UserModelSchema } from 'src/shared/models/shared-user.model'
-import { generateSuccessResSchema } from 'src/shared/models/common.model'
 
 import {
   LoginBodySchema,

@@ -1,11 +1,5 @@
 import { z } from 'zod'
 
-export const generateSuccessResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
-  z.object({
-    message: z.string(),
-    data: dataSchema,
-  })
-
 export const nameSchema = z
   .string()
   .trim()

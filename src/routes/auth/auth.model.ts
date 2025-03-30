@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { UserModelSchema } from 'src/shared/models/shared-user.model'
 import { codeSchema, emailSchema } from 'src/shared/models/common.model'
 import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
-import { Device } from '@prisma/client'
 
+// models
 export const RefreshTokenModelSchema = z.object({
   token: z.string(),
   userId: z.number(),
@@ -12,8 +12,6 @@ export const RefreshTokenModelSchema = z.object({
   expiresAt: z.date(),
   createdAt: z.date(),
 })
-
-export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
 
 export const RoleModelSchema = z.object({
   id: z.number(),
@@ -27,8 +25,6 @@ export const RoleModelSchema = z.object({
   deletedAt: z.date().nullable(),
 })
 
-export type RoleModel = z.infer<typeof RoleModelSchema>
-
 export const DeviceModelSchema = z.object({
   id: z.number(),
   userAgent: z.string(),
@@ -39,8 +35,7 @@ export const DeviceModelSchema = z.object({
   lastActive: z.date(),
 })
 
-export type DeviceModel = z.infer<typeof DeviceModelSchema>
-
+// schemas
 export const VerificationCodeSchema = z.object({
   id: z.number(),
   email: emailSchema,
@@ -49,8 +44,6 @@ export const VerificationCodeSchema = z.object({
   expiresAt: z.date(),
   createdAt: z.date(),
 })
-
-export type VerificationCode = z.infer<typeof VerificationCodeSchema>
 
 export const RegisterBodySchema = UserModelSchema.pick({
   name: true,
@@ -75,8 +68,6 @@ export const RegisterBodySchema = UserModelSchema.pick({
     }
   })
 
-export type RegisterBody = z.infer<typeof RegisterBodySchema>
-
 export const RegisterDataResSchema = UserModelSchema.omit({
   password: true,
   totpSecret: true,
@@ -85,25 +76,29 @@ export const RegisterDataResSchema = UserModelSchema.omit({
   deletedAt: true,
 })
 
-export type RegisterDataRes = z.infer<typeof RegisterDataResSchema>
-
 export const SendOTPBodySchema = VerificationCodeSchema.pick({
   email: true,
   type: true,
 }).strict()
-
-export type SendOTPBody = z.infer<typeof SendOTPBodySchema>
 
 export const LoginBodySchema = UserModelSchema.pick({
   email: true,
   password: true,
 }).strict({ message: 'Additional properties not allowed' })
 
-export type LoginBody = z.infer<typeof LoginBodySchema>
-
 export const LoginDataResSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
 })
 
+// types
+export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
+export type RoleModel = z.infer<typeof RoleModelSchema>
+export type DeviceModel = z.infer<typeof DeviceModelSchema>
+
+export type VerificationCode = z.infer<typeof VerificationCodeSchema>
+export type RegisterBody = z.infer<typeof RegisterBodySchema>
+export type RegisterDataRes = z.infer<typeof RegisterDataResSchema>
+export type SendOTPBody = z.infer<typeof SendOTPBodySchema>
+export type LoginBody = z.infer<typeof LoginBodySchema>
 export type LoginDataRes = z.infer<typeof LoginDataResSchema>

@@ -6,8 +6,7 @@ export interface AccessTokenPayloadSign {
 }
 
 export interface AccessTokenPayload extends AccessTokenPayloadSign {
-  id: string
-  iat: string
+  iat: number
   exp: number
 }
 
@@ -17,7 +16,6 @@ export interface RefreshTokenPayloadSign {
 }
 
 export interface RefreshTokenPayload extends RefreshTokenPayloadSign {
-  id: string
-  iat: string
+  iat: number
   exp: number
 }
