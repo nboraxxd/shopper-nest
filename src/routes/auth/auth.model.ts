@@ -35,8 +35,7 @@ export const DeviceModelSchema = z.object({
   lastActive: z.date(),
 })
 
-// schemas
-export const VerificationCodeSchema = z.object({
+export const VerificationCodeModelSchema = z.object({
   id: z.number(),
   email: emailSchema,
   code: codeSchema,
@@ -45,6 +44,7 @@ export const VerificationCodeSchema = z.object({
   createdAt: z.date(),
 })
 
+// schemas
 export const RegisterBodySchema = UserModelSchema.pick({
   name: true,
   email: true,
@@ -73,7 +73,7 @@ export const RegisterDataResSchema = z.object({
   refreshToken: z.string(),
 })
 
-export const SendOTPBodySchema = VerificationCodeSchema.pick({
+export const SendOTPBodySchema = VerificationCodeModelSchema.pick({
   email: true,
   type: true,
 }).strict()
@@ -85,14 +85,25 @@ export const LoginBodySchema = UserModelSchema.pick({
 
 export const LoginDataResSchema = RegisterDataResSchema
 
+export const RefreshTokenBodySchema = z
+  .object({
+    refreshToken: z.string(),
+  })
+  .strict()
+
+export const RefreshTokenDataResSchema = RegisterDataResSchema
+
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
 export type RoleModel = z.infer<typeof RoleModelSchema>
 export type DeviceModel = z.infer<typeof DeviceModelSchema>
+export type VerificationCodeModel = z.infer<typeof VerificationCodeModelSchema>
 
-export type VerificationCode = z.infer<typeof VerificationCodeSchema>
 export type RegisterBody = z.infer<typeof RegisterBodySchema>
-export type RegisterDataRes = z.infer<typeof RegisterDataResSchema>
 export type SendOTPBody = z.infer<typeof SendOTPBodySchema>
 export type LoginBody = z.infer<typeof LoginBodySchema>
+export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
+
+export type RegisterDataRes = z.infer<typeof RegisterDataResSchema>
 export type LoginDataRes = z.infer<typeof LoginDataResSchema>
+export type RefreshTokenDataRes = z.infer<typeof RefreshTokenDataResSchema>

@@ -5,7 +5,15 @@ import { MessageResDto } from 'src/shared/dtos/common.dto'
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
 
 import { AuthService } from 'src/routes/auth/auth.service'
-import { LoginBodyDto, LoginResDto, RegisterBodyDto, RegisterResDto, SendOTPBodyDto } from 'src/routes/auth/auth.dto'
+import {
+  LoginBodyDto,
+  LoginResDto,
+  RefreshTokenBodyDto,
+  RefreshTokenResDto,
+  RegisterBodyDto,
+  RegisterResDto,
+  SendOTPBodyDto,
+} from 'src/routes/auth/auth.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -39,5 +47,18 @@ export class AuthController {
     const result = await this.authService.login({ ...body, userAgent, ip })
 
     return { data: result, message: 'Login successful' }
+  }
+
+  @Post('refresh-token')
+  @ZodSerializerDto(RefreshTokenResDto)
+  @HttpCode(200)
+  async refreshToken(
+    @Body() body: RefreshTokenBodyDto,
+    @UserAgent() userAgent: string,
+    @Ip() ip: string
+  ): Promise<RefreshTokenResDto> {
+    const result = await this.authService.refreshToken({ ...body, userAgent, ip })
+
+    return { data: result, message: 'Refresh token successful' }
   }
 }

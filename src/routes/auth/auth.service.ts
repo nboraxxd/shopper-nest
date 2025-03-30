@@ -3,17 +3,26 @@ import { addMilliseconds } from 'date-fns'
 import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 
 import envConfig from 'src/shared/env-config'
-import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { HashingService } from 'src/shared/services/hashing.service'
-import { generateOTP, isUniqueConstraintPrismaError } from 'src/shared/helper'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
+import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
+import { generateOTP, isJsonWebTokenError, isUniqueConstraintPrismaError } from 'src/shared/helper'
 
+import {
+  DeviceModel,
+  LoginBody,
+  LoginDataRes,
+  RefreshTokenBody,
+  RefreshTokenDataRes,
+  RegisterBody,
+  RegisterDataRes,
+  SendOTPBody,
+} from 'src/routes/auth/auth.model'
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { RolesService } from 'src/routes/auth/roles.service'
-import { LoginBody, LoginDataRes, RegisterBody, RegisterDataRes, SendOTPBody } from 'src/routes/auth/auth.model'
 
 @Injectable()
 export class AuthService {
@@ -35,7 +44,7 @@ export class AuthService {
     return { accessToken, refreshToken }
   }
 
-  async saveRefreshToken(token: string, deviceId: number) {
+  async saveRefreshToken({ deviceId, token }: { token: string; deviceId: number }) {
     const { exp, userId } = this.tokenService.decodeToken<RefreshTokenPayload>(token)
 
     try {
@@ -53,7 +62,7 @@ export class AuthService {
     }
   }
 
-  async register(payload: RegisterBody & { userAgent: string; ip: string }): Promise<RegisterDataRes> {
+  async register(payload: RegisterBody & Pick<DeviceModel, 'ip' | 'userAgent'>): Promise<RegisterDataRes> {
     const { email, name, password, phoneNumber, code, ip, userAgent } = payload
 
     try {
@@ -105,7 +114,7 @@ export class AuthService {
         userId: user.id,
       })
 
-      await this.saveRefreshToken(tokens.refreshToken, device.id)
+      await this.saveRefreshToken({ token: tokens.refreshToken, deviceId: device.id })
 
       return tokens
     } catch (error) {
@@ -154,7 +163,7 @@ export class AuthService {
     })
   }
 
-  async login(payload: LoginBody & { userAgent: string; ip: string }): Promise<LoginDataRes> {
+  async login(payload: LoginBody & Pick<DeviceModel, 'ip' | 'userAgent'>): Promise<LoginDataRes> {
     const user = await this.authRepository.findUniqueUserIncludeRole({ email: payload.email })
     if (!user) {
       throw new UnprocessableEntityException({
@@ -184,8 +193,48 @@ export class AuthService {
       userId: user.id,
     })
 
-    await this.saveRefreshToken(tokens.refreshToken, device.id)
+    await this.saveRefreshToken({ token: tokens.refreshToken, deviceId: device.id })
 
     return tokens
+  }
+
+  async refreshToken(payload: RefreshTokenBody & Pick<DeviceModel, 'ip' | 'userAgent'>): Promise<RefreshTokenDataRes> {
+    const { refreshToken, ip, userAgent } = payload
+
+    try {
+      const tokenPayload = await this.tokenService.verifyRefreshToken(refreshToken)
+
+      const refreshTokenInDb = await this.authRepository.findUniqueRefreshTokenIncludeUserRole({ token: refreshToken })
+
+      if (!refreshTokenInDb) {
+        throw new UnauthorizedException('Refresh token not found')
+      }
+
+      const {
+        deviceId,
+        user: {
+          roleId,
+          role: { name: roleName },
+        },
+      } = refreshTokenInDb
+
+      const [newAccessToken, newRefreshToken] = await Promise.all([
+        this.tokenService.signAccessToken({ deviceId, roleId, roleName, userId: tokenPayload.userId }),
+        this.tokenService.signRefreshToken({ userId: tokenPayload.userId, exp: tokenPayload.exp }),
+      ])
+
+      await Promise.all([
+        this.authRepository.deleteRefreshToken(refreshToken),
+        this.authRepository.updateDevice(deviceId, { ip, userAgent }),
+        this.saveRefreshToken({ token: newRefreshToken, deviceId }),
+      ])
+
+      return { accessToken: newAccessToken, refreshToken: newRefreshToken }
+    } catch (error) {
+      if (isJsonWebTokenError(error)) {
+        throw new UnauthorizedException(error.message)
+      }
+      throw error
+    }
   }
 }
