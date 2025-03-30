@@ -9,3 +9,5 @@ export type AuthTypeDecoratorPayload = { authTypes: AuthType[]; options: { condi
 export const Auth = (authTypes: AuthType[], options?: { condition: ConditionGuard }) => {
   return SetMetadata(AUTH_TYPE_KEY, { authTypes, options: options ?? { condition: ConditionGuard.And } })
 }
+
+export const IsPublic = () => Auth([AuthType.None])
