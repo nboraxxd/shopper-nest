@@ -1,11 +1,11 @@
 'use server'
 
-import fs from 'fs'
+import React from 'react'
 import { Resend } from 'resend'
 import { Injectable } from '@nestjs/common'
 
+import OTPTemplate from 'emails/otp'
 import envConfig from 'src/shared/env-config'
-import path from 'path'
 
 @Injectable()
 export class MailingService {
@@ -16,18 +16,11 @@ export class MailingService {
   }
 
   sendOTP({ code, subject, to }: { to: string; subject: string; code: string }) {
-    const otpTemplate = fs.readFileSync(path.resolve('src/shared/email-templates/otp.html'), 'utf8')
-
     return this.resend.emails.send({
       from: `Shopper <${envConfig.RESEND_SENDER_EMAIL}>`,
       to,
       subject,
-      html: otpTemplate
-        .replace('{{code}}', code)
-        .replace('{{subject}}', subject)
-        .replace('{{preview}}', subject)
-        .replace('{{title}}', 'Xác minh tài khoản Shopper')
-        .replace('{{expiry}}', '5 phút'),
+      react: <OTPTemplate title={`Shopper - ${code} là mã OTP của bạn`} expiration="5 phút" validationCode={code} />,
     })
   }
 }
