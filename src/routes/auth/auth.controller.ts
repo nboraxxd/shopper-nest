@@ -13,10 +13,14 @@ export class AuthController {
 
   @Post('register')
   @ZodSerializerDto(RegisterResDto)
-  async register(@Body() body: RegisterBodyDto): Promise<RegisterResDto> {
-    const result = await this.authService.register(body)
+  async register(
+    @Body() body: RegisterBodyDto,
+    @UserAgent() userAgent: string,
+    @Ip() ip: string
+  ): Promise<RegisterResDto> {
+    const result = await this.authService.register({ ...body, userAgent, ip })
 
-    return { data: result, message: 'User created successfully' }
+    return { data: result, message: 'Register successful' }
   }
 
   @Post('otp')

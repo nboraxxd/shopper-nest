@@ -3,22 +3,17 @@ import { Injectable } from '@nestjs/common'
 import { UserModel } from 'src/shared/models/shared-user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
-import {
-  DeviceModel,
-  RefreshTokenModel,
-  RegisterBody,
-  RegisterDataRes,
-  RoleModel,
-  VerificationCode,
-} from 'src/routes/auth/auth.model'
+import { DeviceModel, RefreshTokenModel, RegisterBody, RoleModel, VerificationCode } from 'src/routes/auth/auth.model'
 
 @Injectable()
 export class AuthRepesitory {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async insertUser(
+  async insertUserIncludeRole(
     user: Omit<RegisterBody, 'confirmPassword' | 'code'> & Pick<UserModel, 'roleId' | 'status'>
-  ): Promise<RegisterDataRes> {
+  ): Promise<
+    Omit<UserModel, 'password' | 'totpSecret' | 'createdById' | 'updatedById' | 'deletedAt'> & { role: RoleModel }
+  > {
     const { email, name, password, phoneNumber, roleId, status } = user
 
     return this.prismaService.user.create({
@@ -37,6 +32,7 @@ export class AuthRepesitory {
         updatedById: true,
         deletedAt: true,
       },
+      include: { role: true },
     })
   }
 

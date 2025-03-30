@@ -53,7 +53,9 @@ export class AuthService {
     }
   }
 
-  async register({ email, name, password, phoneNumber, code }: RegisterBody): Promise<RegisterDataRes> {
+  async register(payload: RegisterBody & { userAgent: string; ip: string }): Promise<RegisterDataRes> {
+    const { email, name, password, phoneNumber, code, ip, userAgent } = payload
+
     try {
       const verificationCode = await this.authRepository.findUniqueVerificationCode({
         email,
@@ -79,7 +81,7 @@ export class AuthService {
       const hashedPassword = await this.hashingService.hash(password)
 
       const [user] = await Promise.all([
-        this.authRepository.insertUser({
+        this.authRepository.insertUserIncludeRole({
           email,
           name,
           password: hashedPassword,
@@ -90,7 +92,22 @@ export class AuthService {
         this.authRepository.deleteVerificationCode({ email, code, type: TypeOfVerificationCode.REGISTER }),
       ])
 
-      return user
+      const device = await this.authRepository.insertDevice({
+        userId: user.id,
+        ip,
+        userAgent,
+      })
+
+      const tokens = await this.generateTokens({
+        deviceId: device.id,
+        roleId: user.roleId,
+        roleName: user.role.name,
+        userId: user.id,
+      })
+
+      await this.saveRefreshToken(tokens.refreshToken, device.id)
+
+      return tokens
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
         throw new UnprocessableEntityException({

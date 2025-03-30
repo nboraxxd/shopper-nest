@@ -68,12 +68,9 @@ export const RegisterBodySchema = UserModelSchema.pick({
     }
   })
 
-export const RegisterDataResSchema = UserModelSchema.omit({
-  password: true,
-  totpSecret: true,
-  createdById: true,
-  updatedById: true,
-  deletedAt: true,
+export const RegisterDataResSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
 })
 
 export const SendOTPBodySchema = VerificationCodeSchema.pick({
@@ -86,10 +83,7 @@ export const LoginBodySchema = UserModelSchema.pick({
   password: true,
 }).strict({ message: 'Additional properties not allowed' })
 
-export const LoginDataResSchema = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-})
+export const LoginDataResSchema = RegisterDataResSchema
 
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
