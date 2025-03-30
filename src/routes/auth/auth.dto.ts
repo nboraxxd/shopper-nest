@@ -11,6 +11,7 @@ import {
   SendOTPBodySchema,
   RefreshTokenBodySchema,
   RefreshTokenDataResSchema,
+  LogoutBodySchema,
 } from 'src/routes/auth/auth.model'
 
 export class UserDto extends createZodDto(UserModelSchema) {}
@@ -28,3 +29,5 @@ export class LoginResDto extends createZodDto(generateSuccessResSchema(LoginData
 export class RefreshTokenBodyDto extends createZodDto(RefreshTokenBodySchema) {}
 
 export class RefreshTokenResDto extends createZodDto(generateSuccessResSchema(RefreshTokenDataResSchema)) {}
+
+export class LogoutBodyDto extends createZodDto(LogoutBodySchema) {}

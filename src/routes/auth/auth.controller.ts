@@ -8,6 +8,7 @@ import { AuthService } from 'src/routes/auth/auth.service'
 import {
   LoginBodyDto,
   LoginResDto,
+  LogoutBodyDto,
   RefreshTokenBodyDto,
   RefreshTokenResDto,
   RegisterBodyDto,
@@ -60,5 +61,14 @@ export class AuthController {
     const result = await this.authService.refreshToken({ ...body, userAgent, ip })
 
     return { data: result, message: 'Refresh token successful' }
+  }
+
+  @Post('logout')
+  @ZodSerializerDto(MessageResDto)
+  @HttpCode(200)
+  async logout(@Body() body: LogoutBodyDto): Promise<MessageResDto> {
+    await this.authService.logout(body)
+
+    return { message: 'Logout successful' }
   }
 }

@@ -93,6 +93,8 @@ export const RefreshTokenBodySchema = z
 
 export const RefreshTokenDataResSchema = RegisterDataResSchema
 
+export const LogoutBodySchema = RefreshTokenBodySchema
+
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
 export type RoleModel = z.infer<typeof RoleModelSchema>
@@ -103,6 +105,7 @@ export type RegisterBody = z.infer<typeof RegisterBodySchema>
 export type SendOTPBody = z.infer<typeof SendOTPBodySchema>
 export type LoginBody = z.infer<typeof LoginBodySchema>
 export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
+export type LogoutBody = z.infer<typeof LogoutBodySchema>
 
 export type RegisterDataRes = z.infer<typeof RegisterDataResSchema>
 export type LoginDataRes = z.infer<typeof LoginDataResSchema>

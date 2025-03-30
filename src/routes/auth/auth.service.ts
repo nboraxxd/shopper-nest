@@ -9,12 +9,18 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
-import { generateOTP, isJsonWebTokenError, isUniqueConstraintPrismaError } from 'src/shared/helper'
+import {
+  generateOTP,
+  isJsonWebTokenError,
+  isNotFoundPrismaError,
+  isUniqueConstraintPrismaError,
+} from 'src/shared/helper'
 
 import {
   DeviceModel,
   LoginBody,
   LoginDataRes,
+  LogoutBody,
   RefreshTokenBody,
   RefreshTokenDataRes,
   RegisterBody,
@@ -233,6 +239,23 @@ export class AuthService {
     } catch (error) {
       if (isJsonWebTokenError(error)) {
         throw new UnauthorizedException(error.message)
+      }
+      throw error
+    }
+  }
+
+  async logout({ refreshToken }: LogoutBody): Promise<void> {
+    try {
+      await this.tokenService.verifyRefreshToken(refreshToken)
+
+      const deletedRefreshToken = await this.authRepository.deleteRefreshToken(refreshToken)
+
+      await this.authRepository.updateDevice(deletedRefreshToken.deviceId, { isActive: false })
+    } catch (error) {
+      if (isJsonWebTokenError(error)) {
+        throw new UnauthorizedException(error.message)
+      } else if (isNotFoundPrismaError(error)) {
+        throw new UnauthorizedException('Refresh token not found.')
       }
       throw error
     }

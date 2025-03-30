@@ -117,7 +117,7 @@ export class AuthRepesitory {
     return this.prismaService.device.update({ where: { id }, data })
   }
 
-  async deleteRefreshToken(token: string): Promise<void> {
-    await this.prismaService.refreshToken.delete({ where: { token } })
+  async deleteRefreshToken(token: string): Promise<RefreshTokenModel> {
+    return this.prismaService.refreshToken.delete({ where: { token } })
   }
 }
