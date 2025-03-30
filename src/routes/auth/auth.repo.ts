@@ -83,8 +83,8 @@ export class AuthRepesitory {
         ip,
         userAgent,
         userId,
-        isActive: isActive ?? true,
-        lastActive: lastActive ?? new Date(),
+        isActive,
+        lastActive,
       },
     })
   }
