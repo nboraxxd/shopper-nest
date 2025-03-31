@@ -104,6 +104,11 @@ export const GoogleLinkDataResSchema = z.object({
   url: z.string(),
 })
 
+export const GoogleCallbackQuerySchema = z.object({
+  code: z.string({ required_error: 'code is required' }),
+  state: z.string({ required_error: 'state is required' }).optional(),
+})
+
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
 export type RoleModel = z.infer<typeof RoleModelSchema>
@@ -116,6 +121,8 @@ export type LoginBody = z.infer<typeof LoginBodySchema>
 export type DevicePayload = z.infer<typeof DevicePayloadSchema>
 export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
 export type LogoutBody = z.infer<typeof LogoutBodySchema>
+
+export type GoogleCallbackQuery = z.infer<typeof GoogleCallbackQuerySchema>
 
 export type RegisterDataRes = z.infer<typeof RegisterDataResSchema>
 export type LoginDataRes = z.infer<typeof LoginDataResSchema>

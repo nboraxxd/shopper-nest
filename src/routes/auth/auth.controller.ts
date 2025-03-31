@@ -1,25 +1,26 @@
+import { Response } from 'express'
 import { ZodSerializerDto } from 'nestjs-zod'
-import { Body, Controller, Get, HttpCode, Ip, Post, Query, Res } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, Ip, Post, Query, Res, UnauthorizedException } from '@nestjs/common'
 
+import envConfig from 'src/shared/env-config'
 import { MessageResDto } from 'src/shared/dtos/common.dto'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
+import ZodLocalValidationPipe from 'src/shared/pipes/zod-local-validation.pipe'
 
-import { AuthService } from 'src/routes/auth/auth.service'
 import {
   GoogleLinkResDto,
   LoginBodyDto,
   LoginResDto,
-  LogoutBodyDto,
   RefreshTokenBodyDto,
   RefreshTokenResDto,
   RegisterBodyDto,
   RegisterResDto,
   SendOTPBodyDto,
 } from 'src/routes/auth/auth.dto'
+import { AuthService } from 'src/routes/auth/auth.service'
 import { GoogleService } from 'src/routes/auth/google.service'
-import { Response } from 'express'
-import envConfig from 'src/shared/env-config'
+import { GoogleCallbackQuery, LogoutBody, LogoutBodySchema } from 'src/routes/auth/auth.model'
 
 @Controller('auth')
 export class AuthController {
@@ -79,7 +80,9 @@ export class AuthController {
   @IsPublic()
   @ZodSerializerDto(MessageResDto)
   @HttpCode(200)
-  async logout(@Body() body: LogoutBodyDto): Promise<MessageResDto> {
+  async logout(
+    @Body(new ZodLocalValidationPipe(LogoutBodySchema, 'body', UnauthorizedException)) body: LogoutBody
+  ): Promise<MessageResDto> {
     await this.authService.logout(body)
 
     return { message: 'Logout successful' }
@@ -96,8 +99,14 @@ export class AuthController {
 
   @Get('google/callback')
   @IsPublic()
-  async googleCallback(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+  async googleCallback(@Query() query: GoogleCallbackQuery, @Res() res: Response) {
+    const { code, state } = query
+
     try {
+      if (!state) {
+        throw new Error('code is required')
+      }
+
       const result = await this.googleService.handleGoogleCallback({ code, state })
 
       return res.redirect(

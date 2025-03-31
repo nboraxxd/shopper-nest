@@ -8,7 +8,7 @@ import { UserStatus } from 'src/shared/constants/auth.constant'
 import { TokenService } from 'src/shared/services/token.service'
 import { HashingService } from 'src/shared/services/hashing.service'
 
-import { DevicePayload } from 'src/routes/auth/auth.model'
+import { DevicePayload, GoogleCallbackQuery } from 'src/routes/auth/auth.model'
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { RolesService } from 'src/routes/auth/roles.service'
@@ -47,21 +47,12 @@ export class GoogleService {
     return url
   }
 
-  async handleGoogleCallback({ code, state }: { code: string; state: string }) {
-    let userAgent = 'unknown'
-    let ip = 'unknown'
-
-    try {
-      // 1. Lấy thông tin userAgent và ip từ state
-      if (state) {
-        const stateString = Buffer.from(state, 'base64').toString()
-        const clientInfo = JSON.parse(stateString) as DevicePayload
-        userAgent = clientInfo.userAgent ?? 'unknown'
-        ip = clientInfo.ip ?? 'unknown'
-      }
-    } catch (error) {
-      console.error('Error when parsing state string', error)
-    }
+  async handleGoogleCallback({ code, state }: Required<GoogleCallbackQuery>) {
+    // 1. Lấy thông tin userAgent và ip từ state
+    const stateString = Buffer.from(state, 'base64').toString()
+    const clientInfo = JSON.parse(stateString) as DevicePayload
+    const userAgent = clientInfo.userAgent ?? 'unknown'
+    const ip = clientInfo.ip ?? 'unknown'
 
     try {
       // 2. Lấy thông tin user từ code của Google
