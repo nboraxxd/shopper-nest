@@ -2,6 +2,12 @@ import ms from 'ms'
 import { addMilliseconds } from 'date-fns'
 import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 
+import {
+  generateOTP,
+  isJsonWebTokenError,
+  isNotFoundPrismaError,
+  isUniqueConstraintPrismaError,
+} from 'src/shared/helper'
 import envConfig from 'src/shared/env-config'
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
@@ -9,15 +15,9 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
-import {
-  generateOTP,
-  isJsonWebTokenError,
-  isNotFoundPrismaError,
-  isUniqueConstraintPrismaError,
-} from 'src/shared/helper'
 
 import {
-  DeviceModel,
+  DevicePayload,
   LoginBody,
   LoginDataRes,
   LogoutBody,
@@ -68,7 +68,7 @@ export class AuthService {
     }
   }
 
-  async register(payload: RegisterBody & Pick<DeviceModel, 'ip' | 'userAgent'>): Promise<RegisterDataRes> {
+  async register(payload: RegisterBody & DevicePayload): Promise<RegisterDataRes> {
     const { email, name, password, phoneNumber, code, ip, userAgent } = payload
 
     try {
@@ -169,7 +169,7 @@ export class AuthService {
     })
   }
 
-  async login(payload: LoginBody & Pick<DeviceModel, 'ip' | 'userAgent'>): Promise<LoginDataRes> {
+  async login(payload: LoginBody & DevicePayload): Promise<LoginDataRes> {
     const user = await this.authRepository.findUniqueUserIncludeRole({ email: payload.email })
     if (!user) {
       throw new UnprocessableEntityException({
@@ -204,7 +204,7 @@ export class AuthService {
     return tokens
   }
 
-  async refreshToken(payload: RefreshTokenBody & Pick<DeviceModel, 'ip' | 'userAgent'>): Promise<RefreshTokenDataRes> {
+  async refreshToken(payload: RefreshTokenBody & DevicePayload): Promise<RefreshTokenDataRes> {
     const { refreshToken, ip, userAgent } = payload
 
     try {

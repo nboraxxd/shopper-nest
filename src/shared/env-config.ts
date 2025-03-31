@@ -33,6 +33,11 @@ const envSchema = z.object({
 
   RESEND_API_KEY: z.string(),
   RESEND_SENDER_EMAIL: z.string(),
+
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  GOOGLE_REDIRECT_URI: z.string(),
+  GOOGLE_CLIENT_REDIRECT_URI: z.string(),
 })
 
 const configServer = envSchema.safeParse(process.env)

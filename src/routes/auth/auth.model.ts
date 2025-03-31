@@ -85,6 +85,11 @@ export const LoginBodySchema = UserModelSchema.pick({
 
 export const LoginDataResSchema = RegisterDataResSchema
 
+export const DevicePayloadSchema = DeviceModelSchema.pick({
+  userAgent: true,
+  ip: true,
+})
+
 export const RefreshTokenBodySchema = z
   .object({
     refreshToken: z.string(),
@@ -95,6 +100,10 @@ export const RefreshTokenDataResSchema = RegisterDataResSchema
 
 export const LogoutBodySchema = RefreshTokenBodySchema
 
+export const GoogleLinkDataResSchema = z.object({
+  url: z.string(),
+})
+
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
 export type RoleModel = z.infer<typeof RoleModelSchema>
@@ -104,9 +113,11 @@ export type VerificationCodeModel = z.infer<typeof VerificationCodeModelSchema>
 export type RegisterBody = z.infer<typeof RegisterBodySchema>
 export type SendOTPBody = z.infer<typeof SendOTPBodySchema>
 export type LoginBody = z.infer<typeof LoginBodySchema>
+export type DevicePayload = z.infer<typeof DevicePayloadSchema>
 export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
 export type LogoutBody = z.infer<typeof LogoutBodySchema>
 
 export type RegisterDataRes = z.infer<typeof RegisterDataResSchema>
 export type LoginDataRes = z.infer<typeof LoginDataResSchema>
 export type RefreshTokenDataRes = z.infer<typeof RefreshTokenDataResSchema>
+export type GoogleLinkDataRes = z.infer<typeof GoogleLinkDataResSchema>

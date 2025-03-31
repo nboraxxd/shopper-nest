@@ -12,6 +12,7 @@ import {
   RefreshTokenBodySchema,
   RefreshTokenDataResSchema,
   LogoutBodySchema,
+  GoogleLinkDataResSchema,
 } from 'src/routes/auth/auth.model'
 
 export class UserDto extends createZodDto(UserModelSchema) {}
@@ -31,3 +32,5 @@ export class RefreshTokenBodyDto extends createZodDto(RefreshTokenBodySchema) {}
 export class RefreshTokenResDto extends createZodDto(generateSuccessResSchema(RefreshTokenDataResSchema)) {}
 
 export class LogoutBodyDto extends createZodDto(LogoutBodySchema) {}
+
+export class GoogleLinkResDto extends createZodDto(generateSuccessResSchema(GoogleLinkDataResSchema)) {}
