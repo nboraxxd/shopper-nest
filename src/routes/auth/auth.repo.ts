@@ -3,24 +3,17 @@ import { Injectable } from '@nestjs/common'
 import { UserModel } from 'src/shared/models/shared-user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
-import {
-  DeviceModel,
-  RefreshTokenModel,
-  RegisterBody,
-  RoleModel,
-  VerificationCodeModel,
-} from 'src/routes/auth/auth.model'
+import { DeviceModel, RefreshTokenModel, RoleModel, VerificationCodeModel } from 'src/routes/auth/auth.model'
 
 @Injectable()
 export class AuthRepesitory {
   constructor(private readonly prismaService: PrismaService) {}
 
   async insertUserIncludeRole(
-    user: Omit<RegisterBody, 'confirmPassword' | 'code'> & Pick<UserModel, 'roleId' | 'status'>
-  ): Promise<
-    Omit<UserModel, 'password' | 'totpSecret' | 'createdById' | 'updatedById' | 'deletedAt'> & { role: RoleModel }
-  > {
-    const { email, name, password, phoneNumber, roleId, status } = user
+    user: Pick<UserModel, 'email' | 'name' | 'password' | 'phoneNumber' | 'roleId' | 'status'> &
+      Partial<Pick<UserModel, 'avatar'>>
+  ): Promise<UserModel & { role: RoleModel }> {
+    const { email, name, password, phoneNumber, avatar, roleId, status } = user
 
     return this.prismaService.user.create({
       data: {
@@ -28,15 +21,9 @@ export class AuthRepesitory {
         password,
         name,
         phoneNumber,
+        avatar: avatar ?? null,
         roleId,
         status,
-      },
-      omit: {
-        password: true,
-        totpSecret: true,
-        createdById: true,
-        updatedById: true,
-        deletedAt: true,
       },
       include: { role: true },
     })
