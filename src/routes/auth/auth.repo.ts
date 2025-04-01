@@ -5,6 +5,11 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 
 import { DeviceModel, RefreshTokenModel, RoleModel, VerificationCodeModel } from 'src/routes/auth/auth.model'
 
+type VerificationCodeIdentifier =
+  | Pick<VerificationCodeModel, 'id'>
+  | Pick<VerificationCodeModel, 'email'>
+  | Pick<VerificationCodeModel, 'code' | 'email' | 'type'>
+
 @Injectable()
 export class AuthRepesitory {
   constructor(private readonly prismaService: PrismaService) {}
@@ -29,17 +34,12 @@ export class AuthRepesitory {
     })
   }
 
-  async findUniqueUserIncludeRole(
-    where: Pick<UserModel, 'id'> | Pick<UserModel, 'email'>
-  ): Promise<(UserModel & { role: RoleModel }) | null> {
-    return this.prismaService.user.findUnique({ where, include: { role: true } })
-  }
-
   async upsertVerificationCode(
     payload: Pick<VerificationCodeModel, 'email' | 'type' | 'code' | 'expiresAt'>
   ): Promise<void> {
     const { email, code, expiresAt } = payload
 
+    // ở đây where là email vì để mỗi email chỉ có 1 mã OTP duy nhất
     await this.prismaService.verificationCode.upsert({
       where: { email },
       create: payload,
@@ -47,18 +47,11 @@ export class AuthRepesitory {
     })
   }
 
-  findUniqueVerificationCode(
-    where:
-      | Pick<VerificationCodeModel, 'email'>
-      | Pick<VerificationCodeModel, 'id'>
-      | Pick<VerificationCodeModel, 'code' | 'email' | 'type'>
-  ): Promise<VerificationCodeModel | null> {
+  findUniqueVerificationCode(where: VerificationCodeIdentifier): Promise<VerificationCodeModel | null> {
     return this.prismaService.verificationCode.findUnique({ where })
   }
 
-  async deleteVerificationCode(
-    where: Pick<VerificationCodeModel, 'id'> | Pick<VerificationCodeModel, 'email' | 'code' | 'type'>
-  ): Promise<void> {
+  async deleteVerificationCode(where: VerificationCodeIdentifier): Promise<void> {
     await this.prismaService.verificationCode.delete({ where })
   }
 

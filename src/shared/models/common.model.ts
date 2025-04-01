@@ -34,6 +34,14 @@ export const passwordSchema = z
   .min(6, { message: CommonErrorMessages.SHORT_PASSWORD })
   .max(100, { message: CommonErrorMessages.LONG_PASSWORD })
 
+export const confirmPasswordSchema = z
+  .string({
+    required_error: CommonErrorMessages.REQUIRED_CONFIRM_PASSWORD,
+    invalid_type_error: CommonErrorMessages.INVALID_CONFIRM_PASSWORD,
+  })
+  .min(6, { message: CommonErrorMessages.SHORT_CONFIRM_PASSWORD })
+  .max(100, { message: CommonErrorMessages.LONG_CONFIRM_PASSWORD })
+
 export const codeSchema = z
   .string({ required_error: CommonErrorMessages.REQUIRED_CODE, invalid_type_error: CommonErrorMessages.INVALID_CODE })
   .length(6, { message: CommonErrorMessages.CODE_LENGTH })

@@ -4,9 +4,9 @@ import { Injectable } from '@nestjs/common'
 import { OAuth2Client } from 'google-auth-library'
 
 import envConfig from 'src/shared/env-config'
-import { UserStatus } from 'src/shared/constants/shared-auth.constant'
-import { TokenService } from 'src/shared/services/token.service'
 import { HashingService } from 'src/shared/services/hashing.service'
+import { UserStatus } from 'src/shared/constants/shared-auth.constant'
+import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { AuthService } from 'src/routes/auth/auth.service'
@@ -18,11 +18,11 @@ import { DevicePayload, GoogleCallbackQuery } from 'src/routes/auth/auth.model'
 export class GoogleService {
   private oauth2Client: OAuth2Client
   constructor(
-    private readonly authRepository: AuthRepesitory,
+    private readonly authService: AuthService,
     private readonly rolesService: RolesService,
+    private readonly authRepository: AuthRepesitory,
     private readonly hashingService: HashingService,
-    private readonly tokenService: TokenService,
-    private readonly authService: AuthService
+    private readonly sharedUserRepository: SharedUserRepository
   ) {
     this.oauth2Client = new google.auth.OAuth2(
       envConfig.GOOGLE_CLIENT_ID,
@@ -67,7 +67,7 @@ export class GoogleService {
         throw MissingEmailFromGoogleError
       }
 
-      let user = await this.authRepository.findUniqueUserIncludeRole({ email: data.email })
+      let user = await this.sharedUserRepository.findUniqueIncludeRole({ email: data.email })
 
       // Nếu user chưa tồn tại, tiến hành đăng ký user mới
       if (!user) {

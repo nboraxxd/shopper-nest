@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 
 import { TokenService } from 'src/shared/services/token.service'
 import { REQUEST_USER_KEY } from 'src/shared/constants/shared-auth.constant'
-import { isJsonWebTokenError } from 'src/shared/helper'
+import { isJsonWebTokenError } from 'src/shared/utils/errors'
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {

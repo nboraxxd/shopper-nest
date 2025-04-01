@@ -1,10 +1,27 @@
 import { z } from 'zod'
 
-import { UserModelSchema } from 'src/shared/models/shared-user.model'
-import { codeSchema, emailSchema } from 'src/shared/models/common.model'
-import { TypeOfVerificationCode } from 'src/shared/constants/shared-auth.constant'
 import { CommonErrorMessages } from 'src/shared/constants/common.constant'
+import { TypeOfVerificationCode } from 'src/shared/constants/shared-auth.constant'
+import {
+  codeSchema,
+  confirmPasswordSchema,
+  emailSchema,
+  nameSchema,
+  passwordSchema,
+  phoneNumberSchema,
+} from 'src/shared/models/common.model'
+
 import { ErrorMessages } from 'src/routes/auth/auth.constant'
+
+export const validatePasswordMatch = (password: string, confirmPassword: string, ctx: z.RefinementCtx) => {
+  if (password !== confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: CommonErrorMessages.PASSWORDS_DO_NOT_MATCH,
+      path: ['confirmPassword'],
+    })
+  }
+}
 
 // models
 export const RefreshTokenModelSchema = z.object({
@@ -47,31 +64,18 @@ export const VerificationCodeModelSchema = z.object({
 })
 
 // schemas
-export const RegisterBodySchema = UserModelSchema.pick({
-  name: true,
-  email: true,
-  phoneNumber: true,
-  password: true,
-})
-  .extend({
-    confirmPassword: z
-      .string({
-        required_error: CommonErrorMessages.REQUIRED_CONFIRM_PASSWORD,
-        invalid_type_error: CommonErrorMessages.INVALID_CONFIRM_PASSWORD,
-      })
-      .min(6, { message: CommonErrorMessages.SHORT_CONFIRM_PASSWORD })
-      .max(100, { message: CommonErrorMessages.LONG_CONFIRM_PASSWORD }),
+export const RegisterBodySchema = z
+  .object({
+    name: nameSchema,
+    email: emailSchema,
+    phoneNumber: phoneNumberSchema,
+    password: passwordSchema,
+    confirmPassword: confirmPasswordSchema,
     code: codeSchema,
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
-  .superRefine(({ confirmPassword, password }, ctx) => {
-    if (password !== confirmPassword) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: CommonErrorMessages.PASSWORDS_DO_NOT_MATCH,
-        path: ['confirmPassword'],
-      })
-    }
+  .superRefine((data, ctx) => {
+    validatePasswordMatch(data.password, data.confirmPassword, ctx)
   })
 
 export const RegisterDataResSchema = z.object({
@@ -79,26 +83,35 @@ export const RegisterDataResSchema = z.object({
   refreshToken: z.string(),
 })
 
-export const SendOTPBodySchema = VerificationCodeModelSchema.pick({
-  email: true,
-  type: true,
-}).strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+export const SendOTPBodySchema = z
+  .object({
+    email: emailSchema,
+    type: z.enum([TypeOfVerificationCode.REGISTER, TypeOfVerificationCode.FORGOT_PASSWORD], {
+      message: ErrorMessages.INVALID_VERIFICATION_CODE_TYPE,
+    }),
+  })
+  .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
-export const LoginBodySchema = UserModelSchema.pick({
-  email: true,
-  password: true,
-}).strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+export const LoginBodySchema = z
+  .object({
+    email: emailSchema,
+    password: passwordSchema,
+  })
+  .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
 export const LoginDataResSchema = RegisterDataResSchema
 
-export const DevicePayloadSchema = DeviceModelSchema.pick({
-  userAgent: true,
-  ip: true,
+export const DevicePayloadSchema = z.object({
+  userAgent: z.string(),
+  ip: z.string(),
 })
 
 export const RefreshTokenBodySchema = z
   .object({
-    refreshToken: z.string(),
+    refreshToken: z.string({
+      required_error: ErrorMessages.REQUIRED_REFRESH_TOKEN,
+      invalid_type_error: ErrorMessages.INVALID_REFRESH_TOKEN,
+    }),
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
@@ -118,6 +131,18 @@ export const GoogleCallbackQuerySchema = z.object({
   state: z.string({ invalid_type_error: ErrorMessages.INVALID_GOOGLE_STATE }).optional(),
 })
 
+export const ForgotPasswordBodySchema = z
+  .object({
+    email: emailSchema,
+    code: codeSchema,
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+  })
+  .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+  .superRefine((data, ctx) => {
+    validatePasswordMatch(data.password, data.confirmPassword, ctx)
+  })
+
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
 export type RoleModel = z.infer<typeof RoleModelSchema>
@@ -130,6 +155,7 @@ export type LoginBody = z.infer<typeof LoginBodySchema>
 export type DevicePayload = z.infer<typeof DevicePayloadSchema>
 export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
 export type LogoutBody = z.infer<typeof LogoutBodySchema>
+export type ForgotPasswordBody = z.infer<typeof ForgotPasswordBodySchema>
 
 export type GoogleCallbackQuery = z.infer<typeof GoogleCallbackQuerySchema>
 

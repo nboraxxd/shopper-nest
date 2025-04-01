@@ -9,6 +9,7 @@ import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
 import ZodLocalValidationPipe from 'src/shared/pipes/zod-local-validation.pipe'
 
 import {
+  ForgotPasswordBodyDto,
   GoogleLinkResDto,
   LoginBodyDto,
   LoginResDto,
@@ -118,5 +119,15 @@ export class AuthController {
       const message = error instanceof Error ? error.message : ErrorMessages.GENERIC_GOOGLE_CALLBACK
       return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?error=${message}`)
     }
+  }
+
+  @Post('forgot-password')
+  @IsPublic()
+  @ZodSerializerDto(MessageResDto)
+  @HttpCode(200)
+  async forgotPassword(@Body() body: ForgotPasswordBodyDto): Promise<MessageResDto> {
+    await this.authService.forgotPassword(body)
+
+    return { message: SuccessMessages.LOGOUT_SUCCESSFUL }
   }
 }

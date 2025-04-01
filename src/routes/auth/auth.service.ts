@@ -2,13 +2,8 @@ import ms from 'ms'
 import { addMilliseconds } from 'date-fns'
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 
-import {
-  generateOTP,
-  isJsonWebTokenError,
-  isNotFoundPrismaError,
-  isUniqueConstraintPrismaError,
-} from 'src/shared/helper'
 import envConfig from 'src/shared/env-config'
+import { generateOTP } from 'src/shared/utils'
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -16,9 +11,11 @@ import { JsonWebTokenException } from 'src/shared/models/shared-error.model'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/shared-auth.constant'
+import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
 
 import {
   DevicePayload,
+  ForgotPasswordBody,
   LoginBody,
   LoginDataRes,
   LogoutBody,
@@ -27,6 +24,7 @@ import {
   RegisterBody,
   RegisterDataRes,
   SendOTPBody,
+  VerificationCodeModel,
 } from 'src/routes/auth/auth.model'
 import {
   DuplicateRefreshTokenException,
@@ -78,23 +76,33 @@ export class AuthService {
     }
   }
 
+  async verifyVerificationCode({
+    email,
+    code,
+    type,
+  }: Pick<VerificationCodeModel, 'code' | 'email' | 'type'>): Promise<VerificationCodeModel> {
+    const verificationModel = await this.authRepository.findUniqueVerificationCode({
+      email,
+      code,
+      type,
+    })
+
+    if (!verificationModel) {
+      throw InvalidOTPException
+    }
+
+    if (verificationModel.expiresAt < new Date()) {
+      throw ExpiredOTPException
+    }
+
+    return verificationModel
+  }
+
   async register(payload: RegisterBody & DevicePayload): Promise<RegisterDataRes> {
     const { email, name, password, phoneNumber, code, ip, userAgent } = payload
 
     try {
-      const verificationCode = await this.authRepository.findUniqueVerificationCode({
-        email,
-        code,
-        type: TypeOfVerificationCode.REGISTER,
-      })
-
-      if (!verificationCode) {
-        throw InvalidOTPException
-      }
-
-      if (verificationCode.expiresAt < new Date()) {
-        throw ExpiredOTPException
-      }
+      await this.verifyVerificationCode({ email, code, type: TypeOfVerificationCode.REGISTER })
 
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(password)
@@ -165,7 +173,7 @@ export class AuthService {
   }
 
   async login(payload: LoginBody & DevicePayload): Promise<LoginDataRes> {
-    const user = await this.authRepository.findUniqueUserIncludeRole({ email: payload.email })
+    const user = await this.sharedUserRepository.findUniqueIncludeRole({ email: payload.email })
     if (!user) {
       throw EmailOrPasswordIncorrectException('email')
     }
@@ -245,6 +253,33 @@ export class AuthService {
         throw JsonWebTokenException(error.message)
       } else if (isNotFoundPrismaError(error)) {
         throw RefreshTokenNotFoundException
+      }
+      throw error
+    }
+  }
+
+  async forgotPassword({ code, email, password }: ForgotPasswordBody): Promise<void> {
+    try {
+      // Kiểm tra xem email có tồn tại và mã xác minh có hợp lệ không
+      const [user] = await Promise.all([
+        this.sharedUserRepository.findUnique({ email }),
+        this.verifyVerificationCode({ email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD }),
+      ])
+
+      if (!user) {
+        throw EmailDoesNotExistException
+      }
+
+      const hashedPassword = await this.hashingService.hash(password)
+
+      // Cập nhật mật khẩu mới cho user và xóa mã xác minh
+      await Promise.all([
+        this.sharedUserRepository.update({ email }, { password: hashedPassword }),
+        this.authRepository.deleteVerificationCode({ email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD }),
+      ])
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw EmailDoesNotExistException
       }
       throw error
     }

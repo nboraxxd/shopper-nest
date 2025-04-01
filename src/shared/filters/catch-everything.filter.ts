@@ -1,6 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
-import { isUniqueConstraintPrismaError } from 'src/shared/helper'
+import { isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
 
 @Catch()
 export class CatchEverythingFilter implements ExceptionFilter {
