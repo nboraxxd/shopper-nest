@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common'
 
 import { TokenService } from 'src/shared/services/token.service'
-import { REQUEST_USER_KEY } from 'src/shared/constants/auth.constant'
+import { REQUEST_USER_KEY } from 'src/shared/constants/shared-auth.constant'
 import { isJsonWebTokenError } from 'src/shared/helper'
 
 @Injectable()

@@ -1,6 +1,6 @@
 import ms from 'ms'
 import { addMilliseconds } from 'date-fns'
-import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 
 import {
   generateOTP,
@@ -12,9 +12,10 @@ import envConfig from 'src/shared/env-config'
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { HashingService } from 'src/shared/services/hashing.service'
+import { JsonWebTokenException } from 'src/shared/models/shared-error.model'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
-import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
+import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/shared-auth.constant'
 
 import {
   DevicePayload,
@@ -27,6 +28,15 @@ import {
   RegisterDataRes,
   SendOTPBody,
 } from 'src/routes/auth/auth.model'
+import {
+  DuplicateRefreshTokenException,
+  EmailAlreadyExistsException,
+  EmailDoesNotExistException,
+  EmailOrPasswordIncorrectException,
+  ExpiredOTPException,
+  InvalidOTPException,
+  RefreshTokenNotFoundException,
+} from 'src/routes/auth/error.model'
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { RolesService } from 'src/routes/auth/roles.service'
 
@@ -56,13 +66,13 @@ export class AuthService {
     try {
       await this.authRepository.insertRefreshToken({
         userId,
-        token: token,
+        token,
         expiresAt: new Date(exp * 1000),
         deviceId,
       })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw new UnauthorizedException('Duplicate refresh token')
+        throw DuplicateRefreshTokenException
       }
       throw error
     }
@@ -79,17 +89,11 @@ export class AuthService {
       })
 
       if (!verificationCode) {
-        throw new UnprocessableEntityException({
-          message: 'Error occurred',
-          errors: [{ message: 'Invalid code', path: 'code' }],
-        })
+        throw InvalidOTPException
       }
 
       if (verificationCode.expiresAt < new Date()) {
-        throw new UnprocessableEntityException({
-          message: 'Error occurred',
-          errors: [{ message: 'Code has expired', path: 'code' }],
-        })
+        throw ExpiredOTPException
       }
 
       const clientRoleId = await this.rolesService.getClientRoleId()
@@ -125,10 +129,7 @@ export class AuthService {
       return tokens
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw new UnprocessableEntityException({
-          message: 'Error occurred',
-          errors: [{ message: 'Email already exists', path: 'email' }],
-        })
+        throw EmailAlreadyExistsException
       }
       throw error
     }
@@ -138,15 +139,9 @@ export class AuthService {
     const user = await this.sharedUserRepository.findUnique({ email })
 
     if (type === 'REGISTER' && user) {
-      throw new UnprocessableEntityException({
-        message: 'Error occurred',
-        errors: [{ message: 'Email already exists', path: 'email' }],
-      })
+      throw EmailAlreadyExistsException
     } else if (type === 'FORGOT_PASSWORD' && !user) {
-      throw new UnprocessableEntityException({
-        message: 'Error occurred',
-        errors: [{ message: 'Email does not exist', path: 'email' }],
-      })
+      throw EmailDoesNotExistException
     }
 
     setImmediate(() => {
@@ -172,18 +167,12 @@ export class AuthService {
   async login(payload: LoginBody & DevicePayload): Promise<LoginDataRes> {
     const user = await this.authRepository.findUniqueUserIncludeRole({ email: payload.email })
     if (!user) {
-      throw new UnprocessableEntityException({
-        message: 'Error occurred',
-        errors: [{ message: 'Email or password is incorrect', path: 'email' }],
-      })
+      throw EmailOrPasswordIncorrectException('email')
     }
 
     const isPasswordValid = await this.hashingService.compare(payload.password, user.password)
     if (!isPasswordValid) {
-      throw new UnprocessableEntityException({
-        message: 'Error occurred',
-        errors: [{ message: 'Email or password is incorrect', path: 'email' }],
-      })
+      throw EmailOrPasswordIncorrectException('email')
     }
 
     const device = await this.authRepository.insertDevice({
@@ -213,7 +202,7 @@ export class AuthService {
       const refreshTokenInDb = await this.authRepository.findUniqueRefreshTokenIncludeUserRole({ token: refreshToken })
 
       if (!refreshTokenInDb) {
-        throw new UnauthorizedException('Refresh token not found')
+        throw RefreshTokenNotFoundException
       }
 
       const {
@@ -253,9 +242,9 @@ export class AuthService {
       await this.authRepository.updateDevice(deletedRefreshToken.deviceId, { isActive: false })
     } catch (error) {
       if (isJsonWebTokenError(error)) {
-        throw new UnauthorizedException(error.message)
+        throw JsonWebTokenException(error.message)
       } else if (isNotFoundPrismaError(error)) {
-        throw new UnauthorizedException('Refresh token not found.')
+        throw RefreshTokenNotFoundException
       }
       throw error
     }

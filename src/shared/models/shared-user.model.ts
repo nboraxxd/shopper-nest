@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { UserStatus } from 'src/shared/constants/auth.constant'
+import { UserStatus } from 'src/shared/constants/shared-auth.constant'
 import { emailSchema, nameSchema, passwordSchema, phoneNumberSchema } from 'src/shared/models/common.model'
 
 export const UserModelSchema = z.object({

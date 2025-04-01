@@ -2,7 +2,9 @@ import { z } from 'zod'
 
 import { UserModelSchema } from 'src/shared/models/shared-user.model'
 import { codeSchema, emailSchema } from 'src/shared/models/common.model'
-import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
+import { TypeOfVerificationCode } from 'src/shared/constants/shared-auth.constant'
+import { CommonErrorMessages } from 'src/shared/constants/common.constant'
+import { ErrorMessages } from 'src/routes/auth/auth.constant'
 
 // models
 export const RefreshTokenModelSchema = z.object({
@@ -53,16 +55,20 @@ export const RegisterBodySchema = UserModelSchema.pick({
 })
   .extend({
     confirmPassword: z
-      .string({ required_error: 'confirmPassword is required' })
-      .min(6, { message: 'confirmPassword must be at least 6 characters' }),
+      .string({
+        required_error: CommonErrorMessages.REQUIRED_CONFIRM_PASSWORD,
+        invalid_type_error: CommonErrorMessages.INVALID_CONFIRM_PASSWORD,
+      })
+      .min(6, { message: CommonErrorMessages.SHORT_CONFIRM_PASSWORD })
+      .max(100, { message: CommonErrorMessages.LONG_CONFIRM_PASSWORD }),
     code: codeSchema,
   })
-  .strict({ message: 'Additional properties not allowed' })
+  .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (password !== confirmPassword) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Passwords do not match',
+        message: CommonErrorMessages.PASSWORDS_DO_NOT_MATCH,
         path: ['confirmPassword'],
       })
     }
@@ -76,12 +82,12 @@ export const RegisterDataResSchema = z.object({
 export const SendOTPBodySchema = VerificationCodeModelSchema.pick({
   email: true,
   type: true,
-}).strict()
+}).strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
 export const LoginBodySchema = UserModelSchema.pick({
   email: true,
   password: true,
-}).strict({ message: 'Additional properties not allowed' })
+}).strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
 export const LoginDataResSchema = RegisterDataResSchema
 
@@ -94,7 +100,7 @@ export const RefreshTokenBodySchema = z
   .object({
     refreshToken: z.string(),
   })
-  .strict()
+  .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
 export const RefreshTokenDataResSchema = RegisterDataResSchema
 
@@ -105,8 +111,11 @@ export const GoogleLinkDataResSchema = z.object({
 })
 
 export const GoogleCallbackQuerySchema = z.object({
-  code: z.string({ required_error: 'code is required' }),
-  state: z.string({ required_error: 'state is required' }).optional(),
+  code: z.string({
+    required_error: ErrorMessages.REQUIRED_GOOGLE_CODE,
+    invalid_type_error: ErrorMessages.INVALID_GOOGLE_CODE,
+  }),
+  state: z.string({ invalid_type_error: ErrorMessages.INVALID_GOOGLE_STATE }).optional(),
 })
 
 // types

@@ -4,14 +4,15 @@ import { Injectable } from '@nestjs/common'
 import { OAuth2Client } from 'google-auth-library'
 
 import envConfig from 'src/shared/env-config'
-import { UserStatus } from 'src/shared/constants/auth.constant'
+import { UserStatus } from 'src/shared/constants/shared-auth.constant'
 import { TokenService } from 'src/shared/services/token.service'
 import { HashingService } from 'src/shared/services/hashing.service'
 
-import { DevicePayload, GoogleCallbackQuery } from 'src/routes/auth/auth.model'
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { RolesService } from 'src/routes/auth/roles.service'
+import { MissingEmailFromGoogleError } from 'src/routes/auth/error.model'
+import { DevicePayload, GoogleCallbackQuery } from 'src/routes/auth/auth.model'
 
 @Injectable()
 export class GoogleService {
@@ -63,7 +64,7 @@ export class GoogleService {
       const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client })
       const { data } = await oauth2.userinfo.get()
       if (!data.email) {
-        throw new Error('Email not found in Google response')
+        throw MissingEmailFromGoogleError
       }
 
       let user = await this.authRepository.findUniqueUserIncludeRole({ email: data.email })
@@ -103,7 +104,7 @@ export class GoogleService {
 
       return { accessToken, refreshToken }
     } catch (error) {
-      console.error('Error when handling Google callback', error)
+      console.error('🫢 Error when handling Google callback', error)
       throw error
     }
   }

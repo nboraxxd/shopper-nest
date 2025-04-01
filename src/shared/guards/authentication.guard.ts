@@ -2,7 +2,7 @@ import { Reflector } from '@nestjs/core'
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common'
 
 import { AUTH_TYPE_KEY, AuthTypeDecoratorPayload } from 'src/shared/decorators/auth.decorator'
-import { AuthType, ConditionGuard } from 'src/shared/constants/auth.constant'
+import { AuthType, ConditionGuard } from 'src/shared/constants/shared-auth.constant'
 import { APIKeyGuard } from 'src/shared/guards/api-key.guard'
 import { AccessTokenGuard } from 'src/shared/guards/access-token.guard'
 
@@ -16,9 +16,9 @@ export class AuthenticationGuard implements CanActivate {
 
   private get authTypeGuardMap(): Record<string, CanActivate> {
     return {
-      [AuthType.Bearer]: this.accessTokenGuard,
-      [AuthType.ApiKey]: this.apiKeyGuard,
-      [AuthType.None]: { canActivate: () => true },
+      [AuthType.BEARER]: this.accessTokenGuard,
+      [AuthType.API_KEY]: this.apiKeyGuard,
+      [AuthType.NONE]: { canActivate: () => true },
     }
   }
 
@@ -26,15 +26,15 @@ export class AuthenticationGuard implements CanActivate {
     const authTypeValue: AuthTypeDecoratorPayload = this.reflector.getAllAndOverride<
       AuthTypeDecoratorPayload | undefined
     >(AUTH_TYPE_KEY, [context.getHandler(), context.getClass()]) ?? {
-      authTypes: [AuthType.Bearer],
-      options: { condition: ConditionGuard.And },
+      authTypes: [AuthType.BEARER],
+      options: { condition: ConditionGuard.AND },
     }
 
     const guards = authTypeValue.authTypes.map((authType) => this.authTypeGuardMap[authType])
 
     const error = new UnauthorizedException('Unauthorized')
 
-    if (authTypeValue.options.condition === ConditionGuard.Or) {
+    if (authTypeValue.options.condition === ConditionGuard.OR) {
       for (const instance of guards) {
         try {
           const canActivate = await instance.canActivate(context)

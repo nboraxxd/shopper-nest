@@ -20,6 +20,8 @@ import {
 } from 'src/routes/auth/auth.dto'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { GoogleService } from 'src/routes/auth/google.service'
+import { RequiredGoogleStateError } from 'src/routes/auth/error.model'
+import { ErrorMessages, SuccessMessages } from 'src/routes/auth/auth.constant'
 import { GoogleCallbackQuery, LogoutBody, LogoutBodySchema } from 'src/routes/auth/auth.model'
 
 @Controller('auth')
@@ -39,7 +41,7 @@ export class AuthController {
   ): Promise<RegisterResDto> {
     const result = await this.authService.register({ ...body, userAgent, ip })
 
-    return { data: result, message: 'Register successful' }
+    return { data: result, message: SuccessMessages.REGISTER_SUCCESSFUL }
   }
 
   @Post('otp')
@@ -49,7 +51,7 @@ export class AuthController {
   async sendOTP(@Body() body: SendOTPBodyDto): Promise<MessageResDto> {
     await this.authService.sendOTP(body)
 
-    return { message: 'Please check your email for the OTP code' }
+    return { message: SuccessMessages.OTP_SENT }
   }
 
   @Post('login')
@@ -59,7 +61,7 @@ export class AuthController {
   async login(@Body() body: LoginBodyDto, @UserAgent() userAgent: string, @Ip() ip: string): Promise<LoginResDto> {
     const result = await this.authService.login({ ...body, userAgent, ip })
 
-    return { data: result, message: 'Login successful' }
+    return { data: result, message: SuccessMessages.LOGIN_SUCCESSFUL }
   }
 
   @Post('refresh-token')
@@ -73,7 +75,7 @@ export class AuthController {
   ): Promise<RefreshTokenResDto> {
     const result = await this.authService.refreshToken({ ...body, userAgent, ip })
 
-    return { data: result, message: 'Refresh token successful' }
+    return { data: result, message: SuccessMessages.REFRESH_TOKEN_SUCCESSFUL }
   }
 
   @Post('logout')
@@ -85,7 +87,7 @@ export class AuthController {
   ): Promise<MessageResDto> {
     await this.authService.logout(body)
 
-    return { message: 'Logout successful' }
+    return { message: SuccessMessages.LOGOUT_SUCCESSFUL }
   }
 
   @Get('google-link')
@@ -94,7 +96,7 @@ export class AuthController {
   getAuthorizationUrl(@UserAgent() userAgent: string, @Ip() ip: string): GoogleLinkResDto {
     const url = this.googleService.getAuthorizationUrl({ userAgent, ip })
 
-    return { data: { url }, message: 'Google link' }
+    return { data: { url }, message: SuccessMessages.GET_GOOGLE_LINK_SUCCESSFUL }
   }
 
   @Get('google/callback')
@@ -104,7 +106,7 @@ export class AuthController {
 
     try {
       if (!state) {
-        throw new Error('code is required')
+        throw RequiredGoogleStateError
       }
 
       const result = await this.googleService.handleGoogleCallback({ code, state })
@@ -113,7 +115,7 @@ export class AuthController {
         `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`
       )
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error occurred when handling Google callback'
+      const message = error instanceof Error ? error.message : ErrorMessages.GENERIC_GOOGLE_CALLBACK
       return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?error=${message}`)
     }
   }

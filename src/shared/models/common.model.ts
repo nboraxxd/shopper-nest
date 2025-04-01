@@ -1,24 +1,42 @@
 import { z } from 'zod'
 
-export const nameSchema = z
-  .string()
-  .trim()
-  .min(1, { message: 'Name is required' })
-  .max(100, { message: 'Name is too long' })
+import { CommonErrorMessages } from 'src/shared/constants/common.constant'
 
-export const emailSchema = z.string({ required_error: 'Email is required' }).trim().email({ message: 'Invalid email' })
+export const nameSchema = z
+  .string({
+    required_error: CommonErrorMessages.REQUIRED_NAME,
+    invalid_type_error: CommonErrorMessages.INVALID_NAME_TYPE,
+  })
+  .trim()
+  .min(2, { message: CommonErrorMessages.SHORT_NAME })
+  .max(100, { message: CommonErrorMessages.LONG_NAME })
+
+export const emailSchema = z
+  .string({
+    required_error: CommonErrorMessages.REQUIRED_EMAIL,
+    invalid_type_error: CommonErrorMessages.INVALID_EMAIL_TYPE,
+  })
+  .trim()
+  .email({ message: CommonErrorMessages.INVALID_EMAIL })
 
 export const phoneNumberSchema = z
-  .string()
-  .min(1, 'phone number is required')
-  .regex(/(?:\+84|0084|0)[235789][0-9]{1,2}[0-9]{7}(?:[^\d]+|$)/, 'Invalid phone number')
+  .string({
+    required_error: CommonErrorMessages.REQUIRED_PHONE_NUMBER,
+    invalid_type_error: CommonErrorMessages.INVALID_PHONE_NUMBER,
+  })
+  .regex(/(?:\+84|0084|0)[235789][0-9]{1,2}[0-9]{7}(?:[^\d]+|$)/, CommonErrorMessages.INVALID_PHONE_NUMBER)
 
 export const passwordSchema = z
-  .string({ required_error: 'Password is required' })
-  .min(6, { message: 'Password must be at least 6 characters' })
-  .max(100, { message: 'Password must be at most 100 characters' })
+  .string({
+    required_error: CommonErrorMessages.REQUIRED_PASSWORD,
+    invalid_type_error: CommonErrorMessages.INVALID_PASSWORD,
+  })
+  .min(6, { message: CommonErrorMessages.SHORT_PASSWORD })
+  .max(100, { message: CommonErrorMessages.LONG_PASSWORD })
 
-export const codeSchema = z.string().length(6, { message: 'Code must be 6 characters' })
+export const codeSchema = z
+  .string({ required_error: CommonErrorMessages.REQUIRED_CODE, invalid_type_error: CommonErrorMessages.INVALID_CODE })
+  .length(6, { message: CommonErrorMessages.CODE_LENGTH })
 
 export const MessageResSchema = z.object({ message: z.string() })
 
