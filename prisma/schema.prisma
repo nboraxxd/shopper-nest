@@ -42,7 +42,7 @@ model User {
 
   // Này có thể dùng để thực hiện chức năng quên mật khẩu, đăng nhập 2 bước
   totpSecret                  String?               @unique @db.VarChar(1000)
-  status                      UserStatus            @default(INACTIVE)
+  status                      UserStatus            @default(ACTIVE)
   roleId                      Int
   role                        Role                  @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   devices                     Device[]
@@ -464,7 +464,6 @@ enum VerificationCodeType {
 
 enum UserStatus {
   ACTIVE
-  INACTIVE
   BLOCKED
 }
 

@@ -4,14 +4,16 @@ import { Injectable, UnauthorizedException } from '@nestjs/common'
 
 import envConfig from 'src/shared/env-config'
 import { generateOTP } from 'src/shared/utils'
+import { JsonWebTokenException } from 'src/shared/models/error.model'
+import { UserStatus } from 'src/shared/constants/user.constant'
+import { TypeOfVerificationCode } from 'src/shared/constants/common.constant'
+import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
+import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { HashingService } from 'src/shared/services/hashing.service'
-import { JsonWebTokenException } from 'src/shared/models/shared-error.model'
-import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
-import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
-import { TypeOfVerificationCode, UserStatus } from 'src/shared/constants/shared-auth.constant'
-import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
+import { TwoFactorAuthService } from 'src/shared/services/2fa.service'
+import { UserRepository } from 'src/shared/repositories/user.repo'
 
 import {
   DevicePayload,
@@ -24,6 +26,7 @@ import {
   RegisterBody,
   RegisterDataRes,
   SendOTPBody,
+  Setup2FADataRes,
   VerificationCodeModel,
 } from 'src/routes/auth/auth.model'
 import {
@@ -34,18 +37,22 @@ import {
   ExpiredOTPException,
   InvalidOTPException,
   RefreshTokenNotFoundException,
+  TwoFactorAuthAlreadyEnabledException,
 } from 'src/routes/auth/error.model'
-import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { RolesService } from 'src/routes/auth/roles.service'
+import { UserService } from 'src/shared/services/user.service'
+import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly sharedUserRepository: SharedUserRepository,
     private readonly mailingService: MailingService,
     private readonly hashingService: HashingService,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
+    private readonly userService: UserService,
+    private readonly twoFactorAuthService: TwoFactorAuthService,
+    private readonly userRepository: UserRepository,
     private readonly authRepository: AuthRepesitory
   ) {}
 
@@ -144,7 +151,7 @@ export class AuthService {
   }
 
   async sendOTP({ email, type }: SendOTPBody): Promise<void> {
-    const user = await this.sharedUserRepository.findUnique({ email })
+    const user = await this.userRepository.findUnique({ email })
 
     if (type === 'REGISTER' && user) {
       throw EmailAlreadyExistsException
@@ -173,7 +180,7 @@ export class AuthService {
   }
 
   async login(payload: LoginBody & DevicePayload): Promise<LoginDataRes> {
-    const user = await this.sharedUserRepository.findUniqueIncludeRole({ email: payload.email })
+    const user = await this.userRepository.findUniqueIncludeRole({ email: payload.email })
     if (!user) {
       throw EmailOrPasswordIncorrectException('email')
     }
@@ -262,7 +269,7 @@ export class AuthService {
     try {
       // Kiểm tra xem email có tồn tại và mã xác minh có hợp lệ không
       const [user] = await Promise.all([
-        this.sharedUserRepository.findUnique({ email }),
+        this.userRepository.findUnique({ email }),
         this.verifyVerificationCode({ email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD }),
       ])
 
@@ -274,7 +281,7 @@ export class AuthService {
 
       // Cập nhật mật khẩu mới cho user và xóa mã xác minh
       await Promise.all([
-        this.sharedUserRepository.update({ email }, { password: hashedPassword }),
+        this.userRepository.update({ email }, { password: hashedPassword }),
         this.authRepository.deleteVerificationCode({
           email_code_type: { email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD },
         }),
@@ -285,5 +292,24 @@ export class AuthService {
       }
       throw error
     }
+  }
+
+  async setupTwoFactorAuth(userId: number): Promise<Setup2FADataRes> {
+    // Bước 1. Kiểm tra thông tin user
+    const user = await this.userService.validateUserStatus({ id: userId })
+
+    // Bước 2. Kiểm tra user đã bật 2FA chưa
+    if (user.totpSecret) {
+      throw TwoFactorAuthAlreadyEnabledException
+    }
+
+    // Bước 3. Tạo secret key và uri 2FA
+    const { secret, uri } = this.twoFactorAuthService.generateTOTPSecret(user.email)
+
+    // Bước 4. Lưu secret key vào db
+    await this.userRepository.update({ id: userId }, { totpSecret: secret })
+
+    // Bước 5. Trả về secret key và uri 2FA
+    return { secret, uri }
   }
 }

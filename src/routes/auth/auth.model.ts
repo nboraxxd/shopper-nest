@@ -8,8 +8,7 @@ import {
   passwordSchema,
   phoneNumberSchema,
 } from 'src/shared/models/common.model'
-import { CommonErrorMessages } from 'src/shared/constants/common.constant'
-import { TYPE_OF_VERIFICATION_CODES } from 'src/shared/constants/shared-auth.constant'
+import { CommonErrorMessages, TYPE_OF_VERIFICATION_CODES } from 'src/shared/constants/common.constant'
 
 import { ErrorMessages } from 'src/routes/auth/auth.constant'
 
@@ -167,28 +166,6 @@ export const VerifyOTPBodySchema = z
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
-// export const Disable2FABodySchema = z
-//   .object({
-//     code: codeSchema.optional(),
-//     totpCode: totpCodeSchema.optional(),
-//   })
-//   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
-//   .superRefine(({ code, totpCode }, ctx) => {
-//     // if ((totpCode && code) || (!totpCode && !code)) {
-//     if ((totpCode !== undefined) === (code !== undefined)) {
-//       ctx.addIssue({
-//         code: z.ZodIssueCode.custom,
-//         message: ErrorMessages.REQUIRED_ONE_OF_CODE_OR_TOTP,
-//         path: ['totpCode'],
-//       })
-//       ctx.addIssue({
-//         code: z.ZodIssueCode.custom,
-//         message: ErrorMessages.REQUIRED_ONE_OF_CODE_OR_TOTP,
-//         path: ['code'],
-//       })
-//     }
-//   })
-
 export const Disable2FABodySchema = z.union(
   [
     z
@@ -208,6 +185,11 @@ export const Disable2FABodySchema = z.union(
     message: ErrorMessages.REQUIRED_ONE_OF_CODE_OR_TOTP,
   }
 )
+
+export const Setup2FADataResSchema = z.object({
+  secret: z.string(),
+  uri: z.string(),
+})
 
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
@@ -232,3 +214,4 @@ export type RegisterDataRes = z.infer<typeof RegisterDataResSchema>
 export type LoginDataRes = z.infer<typeof LoginDataResSchema>
 export type RefreshTokenDataRes = z.infer<typeof RefreshTokenDataResSchema>
 export type GoogleLinkDataRes = z.infer<typeof GoogleLinkDataResSchema>
+export type Setup2FADataRes = z.infer<typeof Setup2FADataResSchema>

@@ -1,3 +1,19 @@
+export const ACCESS_TOKEN_PAYLOAD = 'accessTokenPayload'
+
+export const TypeOfVerificationCode = {
+  REGISTER: 'REGISTER',
+  FORGOT_PASSWORD: 'FORGOT_PASSWORD',
+  LOGIN: 'LOGIN',
+  DISABLE_2FA: 'DISABLE_2FA',
+} as const
+
+export const TYPE_OF_VERIFICATION_CODES = [
+  TypeOfVerificationCode.REGISTER,
+  TypeOfVerificationCode.FORGOT_PASSWORD,
+  TypeOfVerificationCode.LOGIN,
+  TypeOfVerificationCode.DISABLE_2FA,
+] as const
+
 export const CommonErrorMessages = {
   ADDITIONAL_PROPERTIES_NOT_ALLOWED: 'Error.ADDITIONAL_PROPERTIES_NOT_ALLOWED',
 
@@ -27,4 +43,7 @@ export const CommonErrorMessages = {
   REQUIRED_CODE: 'Error.REQUIRED_CODE',
   INVALID_CODE: 'Error.INVALID_CODE',
   CODE_LENGTH: 'Error.CODE_LENGTH',
+
+  USER_NOT_FOUND: 'Error.USER_NOT_FOUND',
+  USER_BLOCKED: 'Error.USER_BLOCKED',
 } as const

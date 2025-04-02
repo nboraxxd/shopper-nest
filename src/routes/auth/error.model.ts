@@ -1,4 +1,4 @@
-import { UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import { BadRequestException, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 
 import { ErrorMessages } from 'src/routes/auth/auth.constant'
 
@@ -31,6 +31,10 @@ export const EmailOrPasswordIncorrectException = (path: string) =>
 export const DuplicateRefreshTokenException = new UnprocessableEntityException(ErrorMessages.DUPLICATE_REFRESH_TOKEN)
 
 export const RefreshTokenNotFoundException = new UnauthorizedException(ErrorMessages.REFRESH_TOKEN_NOT_FOUND)
+
+export const TwoFactorAuthAlreadyEnabledException = new BadRequestException(
+  ErrorMessages.TWO_FACTOR_AUTH_ALREADY_ENABLED
+)
 
 export const RequiredGoogleStateError = new Error(ErrorMessages.REQUIRED_GOOGLE_STATE)
 

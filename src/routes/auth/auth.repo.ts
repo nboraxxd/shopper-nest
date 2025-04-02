@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
-import { UserModel } from 'src/shared/models/shared-user.model'
+import { UserModel } from 'src/shared/models/user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 import { DeviceModel, RefreshTokenModel, RoleModel, VerificationCodeModel } from 'src/routes/auth/auth.model'

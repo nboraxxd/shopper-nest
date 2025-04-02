@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { RoleModel } from 'src/routes/auth/auth.model'
 
-import { UserModel } from 'src/shared/models/shared-user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
-
-type UserIdentifier = Pick<UserModel, 'id'> | Pick<UserModel, 'email'>
+import { UserIdentifier, UserModel } from 'src/shared/models/user.model'
 
 @Injectable()
-export class SharedUserRepository {
+export class UserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async findUnique(where: UserIdentifier): Promise<UserModel | null> {

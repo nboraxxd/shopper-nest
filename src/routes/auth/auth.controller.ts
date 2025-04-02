@@ -3,10 +3,11 @@ import { ZodSerializerDto } from 'nestjs-zod'
 import { Body, Controller, Get, HttpCode, Ip, Post, Query, Res, UnauthorizedException } from '@nestjs/common'
 
 import envConfig from 'src/shared/env-config'
-import { MessageResDto } from 'src/shared/dtos/common.dto'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
+import { EmptyBodyDto, MessageResDto } from 'src/shared/dtos/common.dto'
 import ZodLocalValidationPipe from 'src/shared/pipes/zod-local-validation.pipe'
+import { ExtractAccessTokenPayload } from 'src/shared/decorators/extract-access-token-payload.decorator'
 
 import {
   ForgotPasswordBodyDto,
@@ -18,6 +19,7 @@ import {
   RegisterBodyDto,
   RegisterResDto,
   SendOTPBodyDto,
+  Setup2FAResDto,
 } from 'src/routes/auth/auth.dto'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { GoogleService } from 'src/routes/auth/google.service'
@@ -129,5 +131,16 @@ export class AuthController {
     await this.authService.forgotPassword(body)
 
     return { message: SuccessMessages.LOGOUT_SUCCESSFUL }
+  }
+
+  @Post('2fa/setup')
+  @ZodSerializerDto(Setup2FAResDto)
+  async setupTwoFactorAuth(
+    @Body() _: EmptyBodyDto,
+    @ExtractAccessTokenPayload('userId') userId: number
+  ): Promise<Setup2FAResDto> {
+    const result = await this.authService.setupTwoFactorAuth(userId)
+
+    return { message: SuccessMessages.SET_UP_2FA_SUCCESSFUL, data: result }
   }
 }

@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common'
 
+import { TwoFactorAuthService } from 'src/shared/services/2fa.service'
+
 import { AuthController } from 'src/routes/auth/auth.controller'
-import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { AuthService } from 'src/routes/auth/auth.service'
-import { GoogleService } from 'src/routes/auth/google.service'
 import { RolesService } from 'src/routes/auth/roles.service'
+import { GoogleService } from 'src/routes/auth/google.service'
+import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, RolesService, GoogleService, AuthRepesitory],
+  providers: [AuthService, RolesService, GoogleService, TwoFactorAuthService, AuthRepesitory],
 })
 export class AuthModule {}

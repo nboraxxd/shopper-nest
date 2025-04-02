@@ -13,6 +13,7 @@ import {
   LogoutBodySchema,
   GoogleLinkDataResSchema,
   ForgotPasswordBodySchema,
+  Setup2FADataResSchema,
 } from 'src/routes/auth/auth.model'
 
 export class RegisterBodyDto extends createZodDto(RegisterBodySchema) {}
@@ -26,3 +27,4 @@ export class RegisterResDto extends createZodDto(generateSuccessResSchema(Regist
 export class LoginResDto extends createZodDto(generateSuccessResSchema(LoginDataResSchema)) {}
 export class RefreshTokenResDto extends createZodDto(generateSuccessResSchema(RefreshTokenDataResSchema)) {}
 export class GoogleLinkResDto extends createZodDto(generateSuccessResSchema(GoogleLinkDataResSchema)) {}
+export class Setup2FAResDto extends createZodDto(generateSuccessResSchema(Setup2FADataResSchema)) {}

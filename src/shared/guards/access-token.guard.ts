@@ -1,8 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common'
 
-import { TokenService } from 'src/shared/services/token.service'
-import { REQUEST_USER_KEY } from 'src/shared/constants/shared-auth.constant'
 import { isJsonWebTokenError } from 'src/shared/utils/errors'
+import { ACCESS_TOKEN_PAYLOAD } from 'src/shared/constants/common.constant'
+import { TokenService } from 'src/shared/services/token.service'
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
@@ -17,8 +17,8 @@ export class AccessTokenGuard implements CanActivate {
     }
 
     try {
-      const decodedToken = await this.tokenService.verifyAccessToken(accessToken)
-      request[REQUEST_USER_KEY] = decodedToken
+      const accessTokenPayload = await this.tokenService.verifyAccessToken(accessToken)
+      request[ACCESS_TOKEN_PAYLOAD] = accessTokenPayload
       return true
     } catch (error) {
       if (isJsonWebTokenError(error)) {

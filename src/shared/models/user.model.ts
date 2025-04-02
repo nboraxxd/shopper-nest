@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { UserStatus } from 'src/shared/constants/shared-auth.constant'
+import { UserStatus } from 'src/shared/constants/user.constant'
 
 export const UserModelSchema = z.object({
   id: z.number(),
@@ -10,7 +10,7 @@ export const UserModelSchema = z.object({
   password: z.string(),
   avatar: z.string().nullable(),
   totpSecret: z.string().nullable(),
-  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BLOCKED]),
+  status: z.enum([UserStatus.ACTIVE, UserStatus.BLOCKED]),
   roleId: z.number().positive(),
 
   createdById: z.number().nullable(),
@@ -21,3 +21,5 @@ export const UserModelSchema = z.object({
 })
 
 export type UserModel = z.infer<typeof UserModelSchema>
+
+export type UserIdentifier = Pick<UserModel, 'id'> | Pick<UserModel, 'email'>
