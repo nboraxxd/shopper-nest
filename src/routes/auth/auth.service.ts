@@ -82,9 +82,7 @@ export class AuthService {
     type,
   }: Pick<VerificationCodeModel, 'code' | 'email' | 'type'>): Promise<VerificationCodeModel> {
     const verificationModel = await this.authRepository.findUniqueVerificationCode({
-      email,
-      code,
-      type,
+      email_code_type: { email, code, type },
     })
 
     if (!verificationModel) {
@@ -116,7 +114,9 @@ export class AuthService {
           roleId: clientRoleId,
           status: UserStatus.ACTIVE,
         }),
-        this.authRepository.deleteVerificationCode({ email, code, type: TypeOfVerificationCode.REGISTER }),
+        this.authRepository.deleteVerificationCode({
+          email_code_type: { email, code, type: TypeOfVerificationCode.REGISTER },
+        }),
       ])
 
       const device = await this.authRepository.insertDevice({
@@ -275,7 +275,9 @@ export class AuthService {
       // Cập nhật mật khẩu mới cho user và xóa mã xác minh
       await Promise.all([
         this.sharedUserRepository.update({ email }, { password: hashedPassword }),
-        this.authRepository.deleteVerificationCode({ email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD }),
+        this.authRepository.deleteVerificationCode({
+          email_code_type: { email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD },
+        }),
       ])
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

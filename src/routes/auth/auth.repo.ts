@@ -7,8 +7,7 @@ import { DeviceModel, RefreshTokenModel, RoleModel, VerificationCodeModel } from
 
 type VerificationCodeIdentifier =
   | Pick<VerificationCodeModel, 'id'>
-  | Pick<VerificationCodeModel, 'email'>
-  | Pick<VerificationCodeModel, 'code' | 'email' | 'type'>
+  | { email_code_type: Pick<VerificationCodeModel, 'email' | 'code' | 'type'> }
 
 @Injectable()
 export class AuthRepesitory {
@@ -37,11 +36,10 @@ export class AuthRepesitory {
   async upsertVerificationCode(
     payload: Pick<VerificationCodeModel, 'email' | 'type' | 'code' | 'expiresAt'>
   ): Promise<void> {
-    const { email, code, expiresAt } = payload
+    const { email, code, type, expiresAt } = payload
 
-    // ở đây where là email vì để mỗi email chỉ có 1 mã OTP duy nhất
     await this.prismaService.verificationCode.upsert({
-      where: { email },
+      where: { email_code_type: { email, code, type } },
       create: payload,
       update: { code, expiresAt },
     })

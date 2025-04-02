@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-import { CommonErrorMessages } from 'src/shared/constants/common.constant'
-import { TypeOfVerificationCode } from 'src/shared/constants/shared-auth.constant'
 import {
   codeSchema,
   confirmPasswordSchema,
@@ -10,6 +8,8 @@ import {
   passwordSchema,
   phoneNumberSchema,
 } from 'src/shared/models/common.model'
+import { CommonErrorMessages } from 'src/shared/constants/common.constant'
+import { TYPE_OF_VERIFICATION_CODES } from 'src/shared/constants/shared-auth.constant'
 
 import { ErrorMessages } from 'src/routes/auth/auth.constant'
 
@@ -58,12 +58,23 @@ export const VerificationCodeModelSchema = z.object({
   id: z.number(),
   email: emailSchema,
   code: codeSchema,
-  type: z.enum([TypeOfVerificationCode.REGISTER, TypeOfVerificationCode.FORGOT_PASSWORD]),
+  type: z.enum(TYPE_OF_VERIFICATION_CODES),
   expiresAt: z.date(),
   createdAt: z.date(),
 })
 
 // schemas
+const codeTypeSchema = z.enum(TYPE_OF_VERIFICATION_CODES, { message: ErrorMessages.INVALID_VERIFICATION_CODE_TYPE })
+
+const totpCodeSchema = z
+  .string({
+    required_error: ErrorMessages.REQUIRED_TOTP_CODE,
+    invalid_type_error: ErrorMessages.INVALID_TOTP_CODE,
+  })
+  .length(6, {
+    message: ErrorMessages.INVALID_TOTP_CODE_LENGTH,
+  })
+
 export const RegisterBodySchema = z
   .object({
     name: nameSchema,
@@ -86,9 +97,7 @@ export const RegisterDataResSchema = z.object({
 export const SendOTPBodySchema = z
   .object({
     email: emailSchema,
-    type: z.enum([TypeOfVerificationCode.REGISTER, TypeOfVerificationCode.FORGOT_PASSWORD], {
-      message: ErrorMessages.INVALID_VERIFICATION_CODE_TYPE,
-    }),
+    type: codeTypeSchema,
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
@@ -143,6 +152,63 @@ export const ForgotPasswordBodySchema = z
     validatePasswordMatch(data.password, data.confirmPassword, ctx)
   })
 
+export const VerifyTOTPBodySchema = z
+  .object({
+    email: emailSchema,
+    totpCode: totpCodeSchema,
+  })
+  .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+
+export const VerifyOTPBodySchema = z
+  .object({
+    email: emailSchema,
+    code: codeSchema,
+    type: codeTypeSchema,
+  })
+  .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+
+// export const Disable2FABodySchema = z
+//   .object({
+//     code: codeSchema.optional(),
+//     totpCode: totpCodeSchema.optional(),
+//   })
+//   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+//   .superRefine(({ code, totpCode }, ctx) => {
+//     // if ((totpCode && code) || (!totpCode && !code)) {
+//     if ((totpCode !== undefined) === (code !== undefined)) {
+//       ctx.addIssue({
+//         code: z.ZodIssueCode.custom,
+//         message: ErrorMessages.REQUIRED_ONE_OF_CODE_OR_TOTP,
+//         path: ['totpCode'],
+//       })
+//       ctx.addIssue({
+//         code: z.ZodIssueCode.custom,
+//         message: ErrorMessages.REQUIRED_ONE_OF_CODE_OR_TOTP,
+//         path: ['code'],
+//       })
+//     }
+//   })
+
+export const Disable2FABodySchema = z.union(
+  [
+    z
+      .object({
+        code: codeSchema,
+        totpCode: z.undefined(), // Đảm bảo totpCode không được cung cấp
+      })
+      .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED }),
+    z
+      .object({
+        code: z.undefined(), // Đảm bảo code không được cung cấp
+        totpCode: totpCodeSchema,
+      })
+      .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED }),
+  ],
+  {
+    message: ErrorMessages.REQUIRED_ONE_OF_CODE_OR_TOTP,
+  }
+)
+
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
 export type RoleModel = z.infer<typeof RoleModelSchema>
@@ -156,6 +222,9 @@ export type DevicePayload = z.infer<typeof DevicePayloadSchema>
 export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
 export type LogoutBody = z.infer<typeof LogoutBodySchema>
 export type ForgotPasswordBody = z.infer<typeof ForgotPasswordBodySchema>
+export type VerifyTOTPBody = z.infer<typeof VerifyTOTPBodySchema>
+export type VerifyOTPBody = z.infer<typeof VerifyOTPBodySchema>
+export type Disable2FABody = z.infer<typeof Disable2FABodySchema>
 
 export type GoogleCallbackQuery = z.infer<typeof GoogleCallbackQuerySchema>
 

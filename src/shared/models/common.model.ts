@@ -48,4 +48,7 @@ export const codeSchema = z
 
 export const MessageResSchema = z.object({ message: z.string() })
 
+export const EmptyBodySchema = z.object({}).strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+
 export type MessageRes = z.infer<typeof MessageResSchema>
+export type EmptyBody = z.infer<typeof EmptyBodySchema>
