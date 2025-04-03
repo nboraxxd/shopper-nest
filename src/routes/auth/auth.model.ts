@@ -6,7 +6,6 @@ import {
   emailSchema,
   nameSchema,
   passwordSchema,
-  phoneNumberSchema,
 } from 'src/shared/models/common.model'
 import { CommonErrorMessages, TYPE_OF_VERIFICATION_CODES } from 'src/shared/constants/common.constant'
 
@@ -78,7 +77,6 @@ export const RegisterBodySchema = z
   .object({
     name: nameSchema,
     email: emailSchema,
-    phoneNumber: phoneNumberSchema,
     password: passwordSchema,
     confirmPassword: confirmPasswordSchema,
     code: codeSchema,
@@ -104,10 +102,29 @@ export const LoginBodySchema = z
   .object({
     email: emailSchema,
     password: passwordSchema,
+    code: codeSchema.optional(),
+    totpCode: totpCodeSchema.optional(),
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+  .superRefine(({ code, totpCode }, ctx) => {
+    if (totpCode && code) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: ErrorMessages.ONLY_TOTP_OR_CODE,
+        path: ['totpCode'],
+      })
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: ErrorMessages.ONLY_TOTP_OR_CODE,
+        path: ['code'],
+      })
+    }
+  })
 
-export const LoginDataResSchema = RegisterDataResSchema
+export const LoginDataResSchema = z.union([
+  z.object({ is2FARequired: z.literal(true), accessToken: z.undefined(), refreshToken: z.undefined() }),
+  z.object({ is2FARequired: z.undefined(), accessToken: z.string(), refreshToken: z.string() }),
+])
 
 export const DevicePayloadSchema = z.object({
   userAgent: z.string(),
@@ -151,40 +168,30 @@ export const ForgotPasswordBodySchema = z
     validatePasswordMatch(data.password, data.confirmPassword, ctx)
   })
 
-export const VerifyTOTPBodySchema = z
+export const Enable2FABodySchema = z.object({
+  totpCode: totpCodeSchema,
+})
+
+export const Disable2FABodySchema = z
   .object({
-    email: emailSchema,
-    totpCode: totpCodeSchema,
+    code: codeSchema.optional(),
+    totpCode: totpCodeSchema.optional(),
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
-
-export const VerifyOTPBodySchema = z
-  .object({
-    email: emailSchema,
-    code: codeSchema,
-    type: codeTypeSchema,
+  .superRefine(({ code, totpCode }, ctx) => {
+    if ((totpCode && code) || (!totpCode && !code)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: ErrorMessages.REQUIRED_ONE_OF_TOTP_OR_CODE,
+        path: ['totpCode'],
+      })
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: ErrorMessages.REQUIRED_ONE_OF_TOTP_OR_CODE,
+        path: ['code'],
+      })
+    }
   })
-  .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
-
-export const Disable2FABodySchema = z.union(
-  [
-    z
-      .object({
-        code: codeSchema,
-        totpCode: z.undefined(), // Đảm bảo totpCode không được cung cấp
-      })
-      .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED }),
-    z
-      .object({
-        code: z.undefined(), // Đảm bảo code không được cung cấp
-        totpCode: totpCodeSchema,
-      })
-      .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED }),
-  ],
-  {
-    message: ErrorMessages.REQUIRED_ONE_OF_CODE_OR_TOTP,
-  }
-)
 
 export const Setup2FADataResSchema = z.object({
   secret: z.string(),
@@ -204,8 +211,7 @@ export type DevicePayload = z.infer<typeof DevicePayloadSchema>
 export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
 export type LogoutBody = z.infer<typeof LogoutBodySchema>
 export type ForgotPasswordBody = z.infer<typeof ForgotPasswordBodySchema>
-export type VerifyTOTPBody = z.infer<typeof VerifyTOTPBodySchema>
-export type VerifyOTPBody = z.infer<typeof VerifyOTPBodySchema>
+export type Enable2FABody = z.infer<typeof Enable2FABodySchema>
 export type Disable2FABody = z.infer<typeof Disable2FABodySchema>
 
 export type GoogleCallbackQuery = z.infer<typeof GoogleCallbackQuerySchema>

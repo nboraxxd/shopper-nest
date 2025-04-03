@@ -64,7 +64,9 @@ export class AuthController {
   async login(@Body() body: LoginBodyDto, @UserAgent() userAgent: string, @Ip() ip: string): Promise<LoginResDto> {
     const result = await this.authService.login({ ...body, userAgent, ip })
 
-    return { data: result, message: SuccessMessages.LOGIN_SUCCESSFUL }
+    return result.is2FARequired
+      ? { data: result, message: SuccessMessages.NEED_2FA_VERIFICATION }
+      : { data: result, message: SuccessMessages.LOGIN_SUCCESSFUL }
   }
 
   @Post('refresh-token')

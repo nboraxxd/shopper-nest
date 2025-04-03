@@ -80,7 +80,6 @@ export class GoogleService {
           email: data.email,
           name: data.name ?? data.email.split('@')[0],
           password: hashedPassword,
-          phoneNumber: '',
           roleId: clientRoleId,
           status: UserStatus.ACTIVE,
           avatar: data.picture,

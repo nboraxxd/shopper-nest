@@ -14,17 +14,15 @@ export class AuthRepesitory {
   constructor(private readonly prismaService: PrismaService) {}
 
   async insertUserIncludeRole(
-    user: Pick<UserModel, 'email' | 'name' | 'password' | 'phoneNumber' | 'roleId' | 'status'> &
-      Partial<Pick<UserModel, 'avatar'>>
+    user: Pick<UserModel, 'email' | 'name' | 'password' | 'roleId' | 'status'> & Partial<Pick<UserModel, 'avatar'>>
   ): Promise<UserModel & { role: RoleModel }> {
-    const { email, name, password, phoneNumber, avatar, roleId, status } = user
+    const { email, name, password, avatar, roleId, status } = user
 
     return this.prismaService.user.create({
       data: {
         email,
         password,
         name,
-        phoneNumber,
         avatar: avatar ?? null,
         roleId,
         status,

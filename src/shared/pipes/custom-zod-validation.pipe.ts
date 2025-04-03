@@ -6,6 +6,7 @@ import {
   PipeTransform,
   UnprocessableEntityException,
 } from '@nestjs/common'
+import { CommonErrorMessages } from 'src/shared/constants/common.constant'
 
 // Hàm helper để lấy schema từ metadata hoặc DTO
 const getZodSchemaFromMetadata = (metadata: ArgumentMetadata): ZodSchema | undefined => {
@@ -37,7 +38,7 @@ class CustomZodValidationPipe implements PipeTransform {
       if (error instanceof ZodError) {
         if (location === 'body') {
           throw new UnprocessableEntityException({
-            message: `Validation error occurred in ${location}`,
+            message: CommonErrorMessages.GENERIC,
             errors: error.errors.map((e) => ({
               message: e.message,
               path: e.path.join('.'),
@@ -46,7 +47,7 @@ class CustomZodValidationPipe implements PipeTransform {
           })
         } else {
           throw new BadRequestException({
-            message: `Error occurred in ${location}`,
+            message: CommonErrorMessages.GENERIC,
             location,
             errors: error.errors.map((e) => ({
               message: e.message,

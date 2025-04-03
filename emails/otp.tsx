@@ -23,7 +23,7 @@ function OTPTemplate({ expiration, title, validationCode }: PlaidVerifyIdentityE
             <Text style={code}>{validationCode}</Text>
           </Section>
           <Text style={paragraph}>Mã OTP sẽ hết hạn sau {expiration}</Text>
-          <Text style={warn}>⛔ Nếu bạn không yêu cầu mã xác minh, vui lòng bỏ qua email này.</Text>
+          <Text style={warn}>⛔ Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</Text>
         </Container>
         <Text style={footer}>From Shopper 😍</Text>
       </Body>

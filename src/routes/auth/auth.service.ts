@@ -34,8 +34,10 @@ import {
   EmailAlreadyExistsException,
   EmailDoesNotExistException,
   EmailOrPasswordIncorrectException,
-  ExpiredOTPException,
-  InvalidOTPException,
+  ExpiredOTPCodeException,
+  InvalidOTPCodeException,
+  InvalidTOTPCodeException,
+  NoNeededCodeOrTOTPException,
   RefreshTokenNotFoundException,
   TwoFactorAuthAlreadyEnabledException,
 } from 'src/routes/auth/error.model'
@@ -93,18 +95,18 @@ export class AuthService {
     })
 
     if (!verificationModel) {
-      throw InvalidOTPException
+      throw InvalidOTPCodeException
     }
 
     if (verificationModel.expiresAt < new Date()) {
-      throw ExpiredOTPException
+      throw ExpiredOTPCodeException
     }
 
     return verificationModel
   }
 
   async register(payload: RegisterBody & DevicePayload): Promise<RegisterDataRes> {
-    const { email, name, password, phoneNumber, code, ip, userAgent } = payload
+    const { email, name, password, code, ip, userAgent } = payload
 
     try {
       await this.verifyVerificationCode({ email, code, type: TypeOfVerificationCode.REGISTER })
@@ -117,7 +119,6 @@ export class AuthService {
           email,
           name,
           password: hashedPassword,
-          phoneNumber,
           roleId: clientRoleId,
           status: UserStatus.ACTIVE,
         }),
@@ -188,6 +189,29 @@ export class AuthService {
     const isPasswordValid = await this.hashingService.compare(payload.password, user.password)
     if (!isPasswordValid) {
       throw EmailOrPasswordIncorrectException('email')
+    }
+
+    if (user.totpSecret) {
+      if (!payload.totpCode && !payload.code) {
+        // Không throw lỗi trong case này
+        // Frontend dựa vào is2FARequired để show modal nhập TOTP
+        return { is2FARequired: true }
+      } else if (payload.totpCode) {
+        const isValid = this.twoFactorAuthService.verifyTOTP(payload.totpCode, user.totpSecret)
+        if (!isValid) {
+          throw InvalidTOTPCodeException
+        }
+      } else if (payload.code) {
+        await this.verifyVerificationCode({
+          email: user.email,
+          code: payload.code,
+          type: TypeOfVerificationCode.LOGIN,
+        })
+      }
+    }
+
+    if (!user.totpSecret && (payload.code || payload.totpCode)) {
+      throw NoNeededCodeOrTOTPException
     }
 
     const device = await this.authRepository.insertDevice({
