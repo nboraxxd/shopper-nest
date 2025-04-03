@@ -26,6 +26,8 @@ export const TwoFactorAuthAlreadyEnabledException = new BadRequestException(
   ErrorMessages.TWO_FACTOR_AUTH_ALREADY_ENABLED
 )
 
+export const TwoFactorAuthNotEnabledException = new BadRequestException(ErrorMessages.TWO_FACTOR_AUTH_NOT_ENABLED)
+
 export const NoNeededCodeOrTOTPException = new BadRequestException(ErrorMessages.NO_NEEDED_CODE_OR_TOTP)
 
 export const InvalidTOTPCodeException = new UnprocessableEntityException({

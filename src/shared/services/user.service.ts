@@ -9,14 +9,16 @@ import { UserRepository } from 'src/shared/repositories/user.repo'
 export class UserService {
   constructor(private readonly sharedUserRepository: UserRepository) {}
 
-  async validateUserStatus(userIdentifier: UserIdentifier): Promise<UserModel> {
+  async validateUser(userIdentifier: UserIdentifier, option?: { isActiveRequired?: boolean }): Promise<UserModel> {
+    const isActiveRequired = option?.isActiveRequired ?? true
+
     const user = await this.sharedUserRepository.findUnique(userIdentifier)
 
     if (!user) {
       throw UserNotFoundException
     }
 
-    if (user.status === UserStatus.BLOCKED) {
+    if (isActiveRequired && user.status === UserStatus.BLOCKED) {
       throw UserBlockedException
     }
 

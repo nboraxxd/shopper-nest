@@ -14,6 +14,7 @@ import {
   GoogleLinkDataResSchema,
   ForgotPasswordBodySchema,
   Setup2FADataResSchema,
+  Disable2FABodySchema,
 } from 'src/routes/auth/auth.model'
 
 export class RegisterBodyDto extends createZodDto(RegisterBodySchema) {}
@@ -22,6 +23,7 @@ export class LoginBodyDto extends createZodDto(LoginBodySchema) {}
 export class RefreshTokenBodyDto extends createZodDto(RefreshTokenBodySchema) {}
 export class LogoutBodyDto extends createZodDto(LogoutBodySchema) {}
 export class ForgotPasswordBodyDto extends createZodDto(ForgotPasswordBodySchema) {}
+export class Disable2FABodyDto extends createZodDto(Disable2FABodySchema) {}
 
 export class RegisterResDto extends createZodDto(generateSuccessResSchema(RegisterDataResSchema)) {}
 export class LoginResDto extends createZodDto(generateSuccessResSchema(LoginDataResSchema)) {}

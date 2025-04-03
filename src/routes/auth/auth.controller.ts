@@ -10,6 +10,7 @@ import ZodLocalValidationPipe from 'src/shared/pipes/zod-local-validation.pipe'
 import { ExtractAccessTokenPayload } from 'src/shared/decorators/extract-access-token-payload.decorator'
 
 import {
+  Disable2FABodyDto,
   ForgotPasswordBodyDto,
   GoogleLinkResDto,
   LoginBodyDto,
@@ -144,5 +145,17 @@ export class AuthController {
     const result = await this.authService.setupTwoFactorAuth(userId)
 
     return { message: SuccessMessages.SET_UP_2FA_SUCCESSFUL, data: result }
+  }
+
+  @Post('2fa/disable')
+  @ZodSerializerDto(MessageResDto)
+  @HttpCode(200)
+  async disableTwoFactorAuth(
+    @Body() { code, totpCode }: Disable2FABodyDto,
+    @ExtractAccessTokenPayload('userId') userId: number
+  ): Promise<MessageResDto> {
+    await this.authService.disableTwoFactorAuth({ userId, code, totpCode })
+
+    return { message: SuccessMessages.DISABLE_2FA_SUCCESSFUL }
   }
 }

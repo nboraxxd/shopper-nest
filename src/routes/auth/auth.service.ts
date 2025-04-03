@@ -4,10 +4,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common'
 
 import envConfig from 'src/shared/env-config'
 import { generateOTP } from 'src/shared/utils'
-import { JsonWebTokenException } from 'src/shared/models/error.model'
+import { JsonWebTokenException, UserNotFoundException } from 'src/shared/models/error.model'
 import { UserStatus } from 'src/shared/constants/user.constant'
 import { TypeOfVerificationCode } from 'src/shared/constants/common.constant'
-import { AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
+import { AccessTokenPayload, AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
@@ -17,6 +17,7 @@ import { UserRepository } from 'src/shared/repositories/user.repo'
 
 import {
   DevicePayload,
+  Disable2FABody,
   ForgotPasswordBody,
   LoginBody,
   LoginDataRes,
@@ -40,6 +41,7 @@ import {
   NoNeededCodeOrTOTPException,
   RefreshTokenNotFoundException,
   TwoFactorAuthAlreadyEnabledException,
+  TwoFactorAuthNotEnabledException,
 } from 'src/routes/auth/error.model'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { UserService } from 'src/shared/services/user.service'
@@ -152,11 +154,17 @@ export class AuthService {
   }
 
   async sendOTP({ email, type }: SendOTPBody): Promise<void> {
+    const essentialUserExistenceChecks = [
+      TypeOfVerificationCode.LOGIN,
+      TypeOfVerificationCode.DISABLE_2FA,
+      TypeOfVerificationCode.FORGOT_PASSWORD,
+    ]
+
     const user = await this.userRepository.findUnique({ email })
 
     if (type === 'REGISTER' && user) {
       throw EmailAlreadyExistsException
-    } else if (type === 'FORGOT_PASSWORD' && !user) {
+    } else if (essentialUserExistenceChecks.includes(type as (typeof essentialUserExistenceChecks)[number]) && !user) {
       throw EmailDoesNotExistException
     }
 
@@ -176,7 +184,9 @@ export class AuthService {
           code: code,
           subject: `${code} là mã xác minh của bạn`,
         })
-      })().catch(() => {})
+      })().catch((err) => {
+        console.error('🫢 Error sending OTP:', err)
+      })
     })
   }
 
@@ -292,14 +302,13 @@ export class AuthService {
   async forgotPassword({ code, email, password }: ForgotPasswordBody): Promise<void> {
     try {
       // Kiểm tra xem email có tồn tại và mã xác minh có hợp lệ không
-      const [user] = await Promise.all([
-        this.userRepository.findUnique({ email }),
-        this.verifyVerificationCode({ email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD }),
-      ])
+      const user = await this.userRepository.findUnique({ email })
 
       if (!user) {
         throw EmailDoesNotExistException
       }
+
+      await this.verifyVerificationCode({ email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD })
 
       const hashedPassword = await this.hashingService.hash(password)
 
@@ -319,21 +328,63 @@ export class AuthService {
   }
 
   async setupTwoFactorAuth(userId: number): Promise<Setup2FADataRes> {
-    // Bước 1. Kiểm tra thông tin user
-    const user = await this.userService.validateUserStatus({ id: userId })
+    try {
+      // Bước 1. Kiểm tra thông tin user
+      const user = await this.userService.validateUser({ id: userId })
 
-    // Bước 2. Kiểm tra user đã bật 2FA chưa
-    if (user.totpSecret) {
-      throw TwoFactorAuthAlreadyEnabledException
+      // Bước 2. Kiểm tra user đã bật 2FA chưa
+      if (user.totpSecret) {
+        throw TwoFactorAuthAlreadyEnabledException
+      }
+
+      // Bước 3. Tạo secret key và uri 2FA
+      const { secret, uri } = this.twoFactorAuthService.generateTOTPSecret(user.email)
+
+      // Bước 4. Lưu secret key vào db
+      await this.userRepository.update({ id: userId }, { totpSecret: secret })
+
+      // Bước 5. Trả về secret key và uri 2FA
+      return { secret, uri }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw UserNotFoundException
+      }
+      throw error
     }
+  }
 
-    // Bước 3. Tạo secret key và uri 2FA
-    const { secret, uri } = this.twoFactorAuthService.generateTOTPSecret(user.email)
+  async disableTwoFactorAuth(payload: Disable2FABody & { userId: AccessTokenPayload['userId'] }): Promise<void> {
+    const { userId, code, totpCode } = payload
 
-    // Bước 4. Lưu secret key vào db
-    await this.userRepository.update({ id: userId }, { totpSecret: secret })
+    try {
+      // Bước 1. Kiểm tra thông tin user
+      const user = await this.userService.validateUser({ id: userId })
 
-    // Bước 5. Trả về secret key và uri 2FA
-    return { secret, uri }
+      // Bước 2. Kiểm tra user đã bật 2FA chưa
+      if (!user.totpSecret) {
+        throw TwoFactorAuthNotEnabledException
+      }
+
+      // Bước 3. Kiểm tra totpCode hoặc code
+      // Không cần kiểm tra trường hợp cả 2 không có hoặc cả 2 đều có
+      // Vì zod đã validate những case đó
+      if (totpCode) {
+        const isValid = this.twoFactorAuthService.verifyTOTP(totpCode, user.totpSecret)
+
+        if (!isValid) {
+          throw InvalidTOTPCodeException
+        }
+      } else if (code) {
+        await this.verifyVerificationCode({ email: user.email, code, type: TypeOfVerificationCode.DISABLE_2FA })
+      }
+
+      // Bước 4. Xóa secret key trong db
+      await this.userRepository.update({ id: userId }, { totpSecret: null })
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw UserNotFoundException
+      }
+      throw error
+    }
   }
 }
