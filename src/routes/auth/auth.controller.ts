@@ -24,7 +24,7 @@ import {
 } from 'src/routes/auth/auth.dto'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { GoogleService } from 'src/routes/auth/google.service'
-import { RequiredGoogleStateError } from 'src/routes/auth/error.model'
+import { RequiredGoogleStateError } from 'src/routes/auth/auth.error'
 import { ErrorMessages, SuccessMessages } from 'src/routes/auth/auth.constant'
 import { GoogleCallbackQuery, LogoutBody, LogoutBodySchema } from 'src/routes/auth/auth.model'
 

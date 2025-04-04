@@ -4,11 +4,12 @@ import { Injectable, UnauthorizedException } from '@nestjs/common'
 
 import envConfig from 'src/shared/env-config'
 import { generateOTP } from 'src/shared/utils'
-import { JsonWebTokenException, UserNotFoundException } from 'src/shared/models/error.model'
 import { UserStatus } from 'src/shared/constants/user.constant'
 import { TypeOfVerificationCode } from 'src/shared/constants/common.constant'
+import { JsonWebTokenException, UserNotFoundException } from 'src/shared/models/error.model'
 import { AccessTokenPayload, AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
+
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -42,7 +43,7 @@ import {
   RefreshTokenNotFoundException,
   TwoFactorAuthAlreadyEnabledException,
   TwoFactorAuthNotEnabledException,
-} from 'src/routes/auth/error.model'
+} from 'src/routes/auth/auth.error'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { UserService } from 'src/shared/services/user.service'
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'

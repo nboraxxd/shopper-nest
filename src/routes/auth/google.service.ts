@@ -11,7 +11,7 @@ import { UserRepository } from 'src/shared/repositories/user.repo'
 import { AuthRepesitory } from 'src/routes/auth/auth.repo'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { RolesService } from 'src/routes/auth/roles.service'
-import { MissingEmailFromGoogleError } from 'src/routes/auth/error.model'
+import { MissingEmailFromGoogleError } from 'src/routes/auth/auth.error'
 import { DevicePayload, GoogleCallbackQuery } from 'src/routes/auth/auth.model'
 
 @Injectable()

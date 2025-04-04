@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
 import { UserStatus } from 'src/shared/constants/user.constant'
+import { UserRepository } from 'src/shared/repositories/user.repo'
 import { UserIdentifier, UserModel } from 'src/shared/models/user.model'
 import { UserBlockedException, UserNotFoundException } from 'src/shared/models/error.model'
-import { UserRepository } from 'src/shared/repositories/user.repo'
 
 @Injectable()
 export class UserService {

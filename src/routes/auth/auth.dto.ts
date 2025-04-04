@@ -1,6 +1,6 @@
 import { createZodDto } from 'nestjs-zod'
 
-import { generateSuccessResSchema } from 'src/shared/utils'
+import { generateResSchema } from 'src/shared/utils'
 
 import {
   LoginBodySchema,
@@ -25,8 +25,8 @@ export class LogoutBodyDto extends createZodDto(LogoutBodySchema) {}
 export class ForgotPasswordBodyDto extends createZodDto(ForgotPasswordBodySchema) {}
 export class Disable2FABodyDto extends createZodDto(Disable2FABodySchema) {}
 
-export class RegisterResDto extends createZodDto(generateSuccessResSchema(RegisterDataResSchema)) {}
-export class LoginResDto extends createZodDto(generateSuccessResSchema(LoginDataResSchema)) {}
-export class RefreshTokenResDto extends createZodDto(generateSuccessResSchema(RefreshTokenDataResSchema)) {}
-export class GoogleLinkResDto extends createZodDto(generateSuccessResSchema(GoogleLinkDataResSchema)) {}
-export class Setup2FAResDto extends createZodDto(generateSuccessResSchema(Setup2FADataResSchema)) {}
+export class RegisterResDto extends createZodDto(generateResSchema(RegisterDataResSchema)) {}
+export class LoginResDto extends createZodDto(generateResSchema(LoginDataResSchema)) {}
+export class RefreshTokenResDto extends createZodDto(generateResSchema(RefreshTokenDataResSchema)) {}
+export class GoogleLinkResDto extends createZodDto(generateResSchema(GoogleLinkDataResSchema)) {}
+export class Setup2FAResDto extends createZodDto(generateResSchema(Setup2FADataResSchema)) {}

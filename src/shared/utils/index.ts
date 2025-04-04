@@ -12,8 +12,35 @@ export const generateOTP = (): string => {
  * @param dataSchema The schema of the data field
  * @returns The schema of a successful response
  */
-export const generateSuccessResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+export const generateResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     message: z.string(),
     data: dataSchema,
+  })
+
+/**
+ * @param dataSchema The schema of the data field
+ * @returns The schema of a successful response
+ */
+export const generateListResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    message: z.string(),
+    data: dataSchema,
+    totalItems: z.number(),
+  })
+
+/**
+ * @param dataSchema The schema of the data field
+ * @returns The schema of a successful response
+ */
+export const generatePaginationListResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    message: z.string(),
+    data: dataSchema,
+    pagination: z.object({
+      currentPage: z.number(),
+      limit: z.number(),
+      totalPages: z.number(),
+      totalItems: z.number(),
+    }),
   })

@@ -10,9 +10,10 @@ import { AuthModule } from './routes/auth/auth.module'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
 import { TransformInterceptor } from 'src/shared/interceptor/transform.interceptor'
+import { LanguageModule } from './routes/language/language.module'
 
 @Module({
-  imports: [SharedModule, AuthModule],
+  imports: [SharedModule, AuthModule, LanguageModule],
   controllers: [AppController],
   providers: [
     AppService,
