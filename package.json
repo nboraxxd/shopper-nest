@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "init:data": "ts-node initial-script",
-    "create-permissions": "ts-node initial-script/create-permissions",
+    "sync-permissions": "ts-node initial-script/sync-permissions",
     "email:dev": "email dev",
     "email:build": "email build",
     "email:export": "email export",
