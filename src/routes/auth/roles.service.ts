@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common'
+
 import { RoleName } from 'src/shared/constants/role.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
+
+import { RoleModel } from 'src/routes/auth/auth.model'
+import { NotFoundClientRoleException } from 'src/routes/auth/auth.error'
 
 @Injectable()
 export class RolesService {
@@ -15,12 +19,17 @@ export class RolesService {
     }
 
     // Truy vấn database để lấy roleId của role "client"
-    const role = await this.prismaService.role.findUniqueOrThrow({
-      where: { name: RoleName.Client },
-    })
+    const response = await this.prismaService.$queryRaw<RoleModel[]>`
+      SELECT * FROM "Role" WHERE name = ${RoleName.Client} AND "deletedAt" IS NULL LIMIT 1;
+      `
+
+    if (response.length === 0) {
+      throw NotFoundClientRoleException
+    }
 
     // Lưu giá trị vào cache và trả về
-    this.clientRoleId = role.id
-    return role.id
+    const roleId = response[0].id
+    this.clientRoleId = roleId
+    return roleId
   }
 }

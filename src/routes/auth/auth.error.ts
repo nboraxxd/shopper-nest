@@ -1,4 +1,9 @@
-import { BadRequestException, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import {
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 
 import { CommonErrorMessages } from 'src/shared/constants/common.constant'
 
@@ -54,6 +59,8 @@ export const EmailOrPasswordIncorrectException = (path: string) =>
     message: CommonErrorMessages.GENERIC,
     errors: [{ message: ErrorMessages.EMAIL_OR_PASSWORD_INCORRECT, path }],
   })
+
+export const NotFoundClientRoleException = new NotFoundException(ErrorMessages.CLIENT_ROLE_NOT_FOUND)
 
 export const RequiredGoogleStateError = new Error(ErrorMessages.REQUIRED_GOOGLE_STATE)
 
