@@ -41,18 +41,6 @@ export const RefreshTokenModelSchema = z.object({
   createdAt: z.date(),
 })
 
-export const RoleModelSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string(),
-  isActive: z.boolean(),
-  createdById: z.number().nullable(),
-  updatedById: z.number().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletedAt: z.date().nullable(),
-})
-
 export const DeviceModelSchema = z.object({
   id: z.number(),
   userAgent: z.string(),
@@ -200,7 +188,6 @@ export const Setup2FADataResSchema = z.object({
 
 // types
 export type RefreshTokenModel = z.infer<typeof RefreshTokenModelSchema>
-export type RoleModel = z.infer<typeof RoleModelSchema>
 export type DeviceModel = z.infer<typeof DeviceModelSchema>
 export type VerificationCodeModel = z.infer<typeof VerificationCodeModelSchema>
 

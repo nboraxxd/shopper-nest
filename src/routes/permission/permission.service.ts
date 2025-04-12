@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import { PermissionAlreadyExistsException, PermissionNotFoundException } from 'src/routes/permission/permission.error'
+
+import { AccessTokenPayload } from 'src/shared/types/jwt.type'
+import { PagedResponse } from 'src/shared/types/response.type'
+import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
+
 import {
   CreatePermissionBody,
   GetPermissionDataRes,
@@ -9,9 +13,7 @@ import {
   UpdatePermissionBody,
 } from 'src/routes/permission/permission.model'
 import { PermissionRepesitory } from 'src/routes/permission/permission.repo'
-import { AccessTokenPayload } from 'src/shared/types/jwt.type'
-import { PagedResponse } from 'src/shared/types/response.type'
-import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
+import { PermissionAlreadyExistsException, PermissionNotFoundException } from 'src/routes/permission/permission.error'
 
 @Injectable()
 export class PermissionService {

@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common'
+
+import { PagedResponse } from 'src/shared/types/response.type'
+import { PrismaService } from 'src/shared/services/prisma.service'
+
 import {
   GetPermissionDataRes,
   GetPermissionsDataRes,
   GetPermissionsQuery,
   PermissionModel,
 } from 'src/routes/permission/permission.model'
-import { PrismaService } from 'src/shared/services/prisma.service'
-import { PagedResponse } from 'src/shared/types/response.type'
 
 @Injectable()
 export class PermissionRepesitory {

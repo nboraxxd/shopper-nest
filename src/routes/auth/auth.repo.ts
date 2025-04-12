@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common'
 
 import { UserModel } from 'src/shared/models/user.model'
+import { RoleModel } from 'src/shared/models/role.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
-import { DeviceModel, RefreshTokenModel, RoleModel, VerificationCodeModel } from 'src/routes/auth/auth.model'
+import { DeviceModel, RefreshTokenModel, VerificationCodeModel } from 'src/routes/auth/auth.model'
 
 type VerificationCodeIdentifier =
   | Pick<VerificationCodeModel, 'id'>

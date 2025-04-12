@@ -1,6 +1,9 @@
 import { ZodSerializerDto } from 'nestjs-zod'
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 
+import { MessageResDto } from 'src/shared/dtos/common.dto'
+import { ExtractAccessTokenPayload } from 'src/shared/decorators/extract-access-token-payload.decorator'
+
 import {
   CreatePermissionBodyDto,
   PermissionParamDto,
@@ -9,10 +12,8 @@ import {
   GetPermissionsResDto,
   UpdatePermissionBodyDto,
 } from 'src/routes/permission/permission.dto'
-import { MessageResDto } from 'src/shared/dtos/common.dto'
 import { SuccessMessages } from 'src/routes/permission/permission.constant'
 import { PermissionService } from 'src/routes/permission/permission.service'
-import { ExtractAccessTokenPayload } from 'src/shared/decorators/extract-access-token-payload.decorator'
 
 @Controller('permissions')
 export class PermissionController {

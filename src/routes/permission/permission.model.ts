@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
+import { HTTPMethod } from 'src/shared/constants/role.constant'
 import { CommonErrorMessages } from 'src/shared/constants/common.constant'
 
-import { HTTPMethod } from 'src/shared/constants/role.constant'
 import { ErrorMessages } from 'src/routes/permission/permission.constant'
 
 const nameSchema = z

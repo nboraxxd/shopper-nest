@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { RoleModel } from 'src/shared/models/role.model'
 import { RoleName } from 'src/shared/constants/role.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
-import { RoleModel } from 'src/routes/auth/auth.model'
 import { NotFoundClientRoleException } from 'src/routes/auth/auth.error'
 
 @Injectable()
