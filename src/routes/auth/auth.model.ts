@@ -21,6 +21,17 @@ export const validatePasswordMatch = (password: string, confirmPassword: string,
   }
 }
 
+const codeTypeSchema = z.enum(TYPE_OF_VERIFICATION_CODES, { message: ErrorMessages.INVALID_VERIFICATION_CODE_TYPE })
+
+const totpCodeSchema = z
+  .string({
+    required_error: ErrorMessages.REQUIRED_TOTP_CODE,
+    invalid_type_error: ErrorMessages.INVALID_TOTP_CODE,
+  })
+  .length(6, {
+    message: ErrorMessages.INVALID_TOTP_CODE_LENGTH,
+  })
+
 // models
 export const RefreshTokenModelSchema = z.object({
   token: z.string(),
@@ -56,23 +67,12 @@ export const VerificationCodeModelSchema = z.object({
   id: z.number(),
   email: emailSchema,
   code: codeSchema,
-  type: z.enum(TYPE_OF_VERIFICATION_CODES),
+  type: codeTypeSchema,
   expiresAt: z.date(),
   createdAt: z.date(),
 })
 
 // schemas
-const codeTypeSchema = z.enum(TYPE_OF_VERIFICATION_CODES, { message: ErrorMessages.INVALID_VERIFICATION_CODE_TYPE })
-
-const totpCodeSchema = z
-  .string({
-    required_error: ErrorMessages.REQUIRED_TOTP_CODE,
-    invalid_type_error: ErrorMessages.INVALID_TOTP_CODE,
-  })
-  .length(6, {
-    message: ErrorMessages.INVALID_TOTP_CODE_LENGTH,
-  })
-
 export const RegisterBodySchema = z
   .object({
     name: nameSchema,

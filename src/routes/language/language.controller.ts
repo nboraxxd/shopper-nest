@@ -1,5 +1,5 @@
 import { ZodSerializerDto } from 'nestjs-zod'
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common'
 
 import { MessageResDto } from 'src/shared/dtos/common.dto'
 import { ExtractAccessTokenPayload } from 'src/shared/decorators/extract-access-token-payload.decorator'
@@ -45,7 +45,7 @@ export class LanguageController {
     return { message: SuccessMessages.CREATE_LANGUAGE_SUCCESSFUL }
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ZodSerializerDto(MessageResDto)
   async update(
     @Param() param: LanguageParamDto,

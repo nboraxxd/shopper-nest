@@ -33,7 +33,7 @@ export const generateListResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
  * @param dataSchema The schema of the data field
  * @returns The schema of a successful response
  */
-export const generatePaginationListResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+export const generatePagedResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     message: z.string(),
     data: dataSchema,

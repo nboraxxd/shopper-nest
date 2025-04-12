@@ -51,4 +51,10 @@ export const CommonErrorMessages = {
 
   USER_NOT_FOUND: 'Error.USER_NOT_FOUND',
   USER_BLOCKED: 'Error.USER_BLOCKED',
+
+  PAGE_REQUIRED: 'Error.PAGE_REQUIRED',
+  PAGE_INVALID: 'Error.PAGE_INVALID',
+
+  LIMIT_REQUIRED: 'Error.LIMIT_REQUIRED',
+  LIMIT_INVALID: 'Error.LIMIT_INVALID',
 } as const
