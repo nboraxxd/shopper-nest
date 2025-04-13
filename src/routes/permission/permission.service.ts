@@ -12,21 +12,21 @@ import {
   GetPermissionsQuery,
   UpdatePermissionBody,
 } from 'src/routes/permission/permission.model'
-import { PermissionRepesitory } from 'src/routes/permission/permission.repo'
+import { PermissionRepository } from 'src/routes/permission/permission.repo'
 import { PermissionAlreadyExistsException, PermissionNotFoundException } from 'src/routes/permission/permission.error'
 
 @Injectable()
 export class PermissionService {
-  constructor(private readonly permissionRepesitory: PermissionRepesitory) {}
+  constructor(private readonly permissionRepository: PermissionRepository) {}
 
   async list({ limit, page }: GetPermissionsQuery): Promise<PagedResponse<GetPermissionsDataRes>> {
-    const result = await this.permissionRepesitory.list({ limit, page })
+    const result = await this.permissionRepository.list({ limit, page })
 
     return result
   }
 
   async detail(id: PermissionParam['id']): Promise<GetPermissionDataRes> {
-    const result = await this.permissionRepesitory.findById(id)
+    const result = await this.permissionRepository.findById(id)
 
     if (!result) {
       throw PermissionNotFoundException
@@ -39,7 +39,7 @@ export class PermissionService {
     const { name, path, method, userId } = payload
 
     try {
-      await this.permissionRepesitory.create({ name, path, method, createdById: userId })
+      await this.permissionRepository.create({ name, path, method, createdById: userId })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
         throw PermissionAlreadyExistsException
@@ -55,7 +55,7 @@ export class PermissionService {
     const { userId, description, method, name, path } = payload
 
     try {
-      await this.permissionRepesitory.update(id, { name, path, method, description, updatedById: userId })
+      await this.permissionRepository.update(id, { name, path, method, description, updatedById: userId })
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw PermissionNotFoundException
@@ -72,7 +72,7 @@ export class PermissionService {
     isHard: boolean = false
   ): Promise<void> {
     try {
-      await this.permissionRepesitory.delete(id, userId, isHard)
+      await this.permissionRepository.delete(id, userId, isHard)
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw PermissionNotFoundException

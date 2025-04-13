@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from 'src/app.module'
+import { PermissionModel } from 'src/shared/models/permission.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { PermissionModel } from 'src/routes/permission/permission.model'
 
 type PermissionItem = Pick<PermissionModel, 'name' | 'description' | 'method' | 'path'>
 

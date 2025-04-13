@@ -2,16 +2,17 @@ import { Injectable } from '@nestjs/common'
 
 import { PagedResponse } from 'src/shared/types/response.type'
 import { PrismaService } from 'src/shared/services/prisma.service'
+import { PermissionModel } from 'src/shared/models/permission.model'
 
 import {
   GetPermissionDataRes,
   GetPermissionsDataRes,
   GetPermissionsQuery,
-  PermissionModel,
+  PermissionParam,
 } from 'src/routes/permission/permission.model'
 
 @Injectable()
-export class PermissionRepesitory {
+export class PermissionRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list({ limit, page }: GetPermissionsQuery): Promise<PagedResponse<GetPermissionsDataRes>> {
@@ -41,7 +42,7 @@ export class PermissionRepesitory {
     }
   }
 
-  findById(id: PermissionModel['id']): Promise<GetPermissionDataRes | null> {
+  findById(id: PermissionParam['id']): Promise<GetPermissionDataRes | null> {
     return this.prismaService.permission.findUnique({
       where: { id, deletedAt: null },
       omit: { deletedAt: true, deletedById: true },
@@ -60,19 +61,19 @@ export class PermissionRepesitory {
   }
 
   async update(
-    id: PermissionModel['id'],
+    id: PermissionParam['id'],
     data: Partial<Pick<PermissionModel, 'name' | 'path' | 'method' | 'description' | 'updatedById'>>
   ): Promise<void> {
     const { name, path, method, description, updatedById } = data
 
     await this.prismaService.permission.update({
       where: { id, deletedAt: null },
-      data: { name, path: path, method: method, description: description, updatedById },
+      data: { name, path, method, description, updatedById },
     })
   }
 
   async delete(
-    id: PermissionModel['id'],
+    id: PermissionParam['id'],
     deletedById: PermissionModel['deletedById'],
     isHard: boolean = false
   ): Promise<void> {
@@ -83,7 +84,7 @@ export class PermissionRepesitory {
     } else {
       await this.prismaService.permission.update({
         where: { id, deletedAt: null },
-        data: { deletedAt: new Date(), deletedById },
+        data: { deletedById, deletedAt: new Date() },
       })
     }
   }

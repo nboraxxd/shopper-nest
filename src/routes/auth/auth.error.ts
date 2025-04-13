@@ -13,18 +13,18 @@ import { ErrorMessages } from 'src/routes/auth/auth.constant'
  * Code and token errors
  */
 
-export const DuplicateRefreshTokenException = new UnprocessableEntityException(ErrorMessages.DUPLICATE_REFRESH_TOKEN)
+export const DuplicateRefreshTokenException = new UnauthorizedException(ErrorMessages.DUPLICATE_REFRESH_TOKEN)
 
 export const RefreshTokenNotFoundException = new UnauthorizedException(ErrorMessages.REFRESH_TOKEN_NOT_FOUND)
 
 export const InvalidOTPCodeException = new UnprocessableEntityException({
   message: CommonErrorMessages.GENERIC,
-  errors: [{ message: ErrorMessages.INVALID_OTP_CODE, path: 'code' }],
+  errors: [{ message: ErrorMessages.INVALID_OTP_CODE, path: 'code', location: 'body' }],
 })
 
 export const ExpiredOTPCodeException = new UnprocessableEntityException({
   message: CommonErrorMessages.GENERIC,
-  errors: [{ message: ErrorMessages.EXPIRED_OTP_CODE, path: 'code' }],
+  errors: [{ message: ErrorMessages.EXPIRED_OTP_CODE, path: 'code', location: 'body' }],
 })
 
 export const TwoFactorAuthAlreadyEnabledException = new BadRequestException(
@@ -37,7 +37,7 @@ export const NoNeededCodeOrTOTPException = new BadRequestException(ErrorMessages
 
 export const InvalidTOTPCodeException = new UnprocessableEntityException({
   message: CommonErrorMessages.GENERIC,
-  errors: [{ message: ErrorMessages.INVALID_TOTP_CODE, path: 'totpCode' }],
+  errors: [{ message: ErrorMessages.INVALID_TOTP_CODE, path: 'totpCode', location: 'body' }],
 })
 
 /**
@@ -46,18 +46,18 @@ export const InvalidTOTPCodeException = new UnprocessableEntityException({
 
 export const EmailAlreadyExistsException = new UnprocessableEntityException({
   message: CommonErrorMessages.GENERIC,
-  errors: [{ message: ErrorMessages.EMAIL_ALREADY_EXISTS, path: 'email' }],
+  errors: [{ message: ErrorMessages.EMAIL_ALREADY_EXISTS, path: 'email', location: 'body' }],
 })
 
 export const EmailDoesNotExistException = new UnprocessableEntityException({
   message: CommonErrorMessages.GENERIC,
-  errors: [{ message: ErrorMessages.EMAIL_DOES_NOT_EXIST, path: 'email' }],
+  errors: [{ message: ErrorMessages.EMAIL_DOES_NOT_EXIST, path: 'email', location: 'body' }],
 })
 
 export const EmailOrPasswordIncorrectException = (path: string) =>
   new UnprocessableEntityException({
     message: CommonErrorMessages.GENERIC,
-    errors: [{ message: ErrorMessages.EMAIL_OR_PASSWORD_INCORRECT, path }],
+    errors: [{ message: ErrorMessages.EMAIL_OR_PASSWORD_INCORRECT, path, location: 'body' }],
   })
 
 export const NotFoundClientRoleException = new NotFoundException(ErrorMessages.CLIENT_ROLE_NOT_FOUND)

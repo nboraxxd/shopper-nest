@@ -1,0 +1,93 @@
+import { z } from 'zod'
+
+import { RoleModelSchema } from 'src/shared/models/role.model'
+import { limitSchema, pageSchema } from 'src/shared/models/common.model'
+import { CommonErrorMessages } from 'src/shared/constants/common.constant'
+import { PermissionModelSchema } from 'src/shared/models/permission.model'
+
+import { ErrorMessages } from 'src/routes/role/role.constant'
+
+export const CreateRoleBodySchema = z
+  .object({
+    name: z
+      .string({
+        required_error: ErrorMessages.ROLE_NAME_REQUIRED,
+        invalid_type_error: ErrorMessages.ROLE_NAME_INVALID,
+      })
+      .max(500, ErrorMessages.ROLE_NAME_TOO_LONG),
+    description: z
+      .string({
+        invalid_type_error: ErrorMessages.ROLE_DESCRIPTION_INVALID,
+      })
+      .optional(),
+    isActive: z
+      .boolean({
+        invalid_type_error: ErrorMessages.ROLE_IS_ACTIVE_INVALID,
+      })
+      .optional(),
+  })
+  .strict(CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED)
+
+export const UpdateRoleBodySchema = CreateRoleBodySchema.extend({
+  permissionIds: z.array(
+    z
+      .number({
+        invalid_type_error: CommonErrorMessages.PERMISSION_ID_INVALID,
+      })
+      .int(CommonErrorMessages.PERMISSION_ID_INVALID)
+      .positive(CommonErrorMessages.PERMISSION_ID_INVALID)
+  ),
+}).partial()
+
+export const RoleParamSchema = z
+  .object({
+    id: z.coerce
+      .number({
+        required_error: ErrorMessages.ROLE_ID_REQUIRED,
+        invalid_type_error: ErrorMessages.ROLE_ID_INVALID,
+      })
+      .int(ErrorMessages.ROLE_ID_INVALID)
+      .positive(ErrorMessages.ROLE_ID_INVALID),
+  })
+  .strict(CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED)
+
+export const GetRolesQuerySchema = z
+  .object({
+    page: pageSchema,
+    limit: limitSchema,
+    isActive: z.coerce
+      .boolean({
+        invalid_type_error: ErrorMessages.ROLE_IS_ACTIVE_INVALID,
+      })
+      .optional(),
+  })
+  .strict({
+    message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED,
+  })
+
+export const GetRoleDataResSchema = RoleModelSchema.omit({
+  createdById: true,
+  updatedById: true,
+  deletedById: true,
+  deletedAt: true,
+}).extend({
+  permissions: z.array(
+    PermissionModelSchema.omit({
+      createdById: true,
+      updatedById: true,
+      deletedById: true,
+      deletedAt: true,
+    })
+  ),
+})
+
+export const GetRolesDataResSchema = z.array(GetRoleDataResSchema.omit({ permissions: true }))
+
+export type RoleParam = z.infer<typeof RoleParamSchema>
+export type GetRolesQuery = z.infer<typeof GetRolesQuerySchema>
+
+export type CreateRoleBody = z.infer<typeof CreateRoleBodySchema>
+export type UpdateRoleBody = z.infer<typeof UpdateRoleBodySchema>
+
+export type GetRoleDataRes = z.infer<typeof GetRoleDataResSchema>
+export type GetRolesDataRes = z.infer<typeof GetRolesDataResSchema>

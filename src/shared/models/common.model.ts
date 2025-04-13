@@ -2,6 +2,11 @@ import { z } from 'zod'
 
 import { CommonErrorMessages } from 'src/shared/constants/common.constant'
 
+// Schemas
+export const MessageResSchema = z.object({ message: z.string() })
+
+export const EmptyBodySchema = z.object({}).strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+
 export const nameSchema = z
   .string({
     required_error: CommonErrorMessages.REQUIRED_NAME,
@@ -46,9 +51,24 @@ export const codeSchema = z
   .string({ required_error: CommonErrorMessages.REQUIRED_CODE, invalid_type_error: CommonErrorMessages.INVALID_CODE })
   .length(6, { message: CommonErrorMessages.CODE_LENGTH })
 
-export const MessageResSchema = z.object({ message: z.string() })
+export const pageSchema = z.coerce
+  .number({
+    required_error: CommonErrorMessages.PAGE_REQUIRED,
+    invalid_type_error: CommonErrorMessages.PAGE_INVALID,
+  })
+  .int(CommonErrorMessages.PAGE_INVALID)
+  .positive(CommonErrorMessages.PAGE_INVALID)
+  .default(1)
 
-export const EmptyBodySchema = z.object({}).strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
+export const limitSchema = z.coerce
+  .number({
+    required_error: CommonErrorMessages.LIMIT_REQUIRED,
+    invalid_type_error: CommonErrorMessages.LIMIT_INVALID,
+  })
+  .int(CommonErrorMessages.LIMIT_INVALID)
+  .positive(CommonErrorMessages.LIMIT_INVALID)
+  .default(10)
 
+// Types
 export type MessageRes = z.infer<typeof MessageResSchema>
 export type EmptyBody = z.infer<typeof EmptyBodySchema>
