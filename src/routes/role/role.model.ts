@@ -29,14 +29,19 @@ export const CreateRoleBodySchema = z
   .strict(CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED)
 
 export const UpdateRoleBodySchema = CreateRoleBodySchema.extend({
-  permissionIds: z.array(
-    z
-      .number({
-        invalid_type_error: CommonErrorMessages.PERMISSION_ID_INVALID,
-      })
-      .int(CommonErrorMessages.PERMISSION_ID_INVALID)
-      .positive(CommonErrorMessages.PERMISSION_ID_INVALID)
-  ),
+  permissionIds: z
+    .array(
+      z
+        .number({
+          invalid_type_error: CommonErrorMessages.PERMISSION_ID_INVALID,
+        })
+        .int(CommonErrorMessages.PERMISSION_ID_INVALID)
+        .positive(CommonErrorMessages.PERMISSION_ID_INVALID)
+    )
+    .optional()
+    .refine((val) => (val ? new Set(val).size === val.length : true), {
+      message: CommonErrorMessages.PERMISSION_ID_MUST_BE_UNIQUE,
+    }),
 }).partial()
 
 export const RoleParamSchema = z
@@ -55,11 +60,13 @@ export const GetRolesQuerySchema = z
   .object({
     page: pageSchema,
     limit: limitSchema,
-    isActive: z.coerce
-      .boolean({
-        invalid_type_error: ErrorMessages.ROLE_IS_ACTIVE_INVALID,
-      })
-      .optional(),
+    isActive: z
+      .enum(['true', 'false'], { message: ErrorMessages.ROLE_IS_ACTIVE_INVALID })
+      .optional()
+      .transform((val) => {
+        if (val === undefined) return undefined
+        return val === 'true' ? true : false
+      }),
   })
   .strict({
     message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED,

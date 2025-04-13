@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common'
 
 import { PagedResponse } from 'src/shared/types/response.type'
 import { AccessTokenPayload } from 'src/shared/types/jwt.type'
+import { PermissionIdsNotFoundException } from 'src/shared/models/error.model'
+import { PermissionRepository } from 'src/shared/repositories/permission.repo'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
 
 import {
@@ -17,7 +19,10 @@ import { RoleAlreadyExistsException, RoleNotFoundException } from 'src/routes/ro
 
 @Injectable()
 export class RoleService {
-  constructor(private readonly roleRepository: RoleRepository) {}
+  constructor(
+    private readonly roleRepository: RoleRepository,
+    private readonly permissionRepository: PermissionRepository
+  ) {}
 
   async list({ limit, page, isActive }: GetRolesQuery): Promise<PagedResponse<GetRolesDataRes>> {
     const result = await this.roleRepository.list({ limit, page, isActive })
@@ -52,6 +57,17 @@ export class RoleService {
     const { userId, description, isActive, name, permissionIds } = payload
 
     try {
+      if (permissionIds && permissionIds.length > 0) {
+        const existingPermissionIds = await this.permissionRepository.listExistingIds(permissionIds)
+        const existingPermissionSet = new Set(existingPermissionIds)
+
+        const notFoundPermissionIds = permissionIds.filter((id) => !existingPermissionSet.has(id))
+
+        if (notFoundPermissionIds.length > 0) {
+          throw PermissionIdsNotFoundException(notFoundPermissionIds)
+        }
+      }
+
       await this.roleRepository.update(id, { name, description, isActive, permissionIds, updatedById: userId })
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

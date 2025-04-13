@@ -12,6 +12,7 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { TwoFactorAuthService } from 'src/shared/services/2fa.service'
 import { UserRepository } from 'src/shared/repositories/user.repo'
+import { PermissionRepository } from 'src/shared/repositories/permission.repo'
 
 const sharedServices = [
   PrismaService,
@@ -21,6 +22,7 @@ const sharedServices = [
   UserService,
   TwoFactorAuthService,
   UserRepository,
+  PermissionRepository,
 ]
 
 @Global()

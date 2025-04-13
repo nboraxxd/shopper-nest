@@ -1,3 +1,5 @@
+import { PermissionModel } from 'src/shared/models/permission.model'
+
 export const ACCESS_TOKEN_PAYLOAD = 'accessTokenPayload'
 
 export const TypeOfVerificationCode = {
@@ -18,6 +20,7 @@ export const CommonErrorMessages = {
   GENERIC: 'Error.GENERIC',
   ADDITIONAL_PROPERTIES_NOT_ALLOWED: 'Error.ADDITIONAL_PROPERTIES_NOT_ALLOWED',
   DATA_NOT_FOUND: 'Error.DATA_NOT_FOUND',
+  RECORD_NOT_FOUND: 'Error.RECORD_NOT_FOUND',
 
   REQUIRED_ACCESS_TOKEN: 'Error.REQUIRED_ACCESS_TOKEN',
   INVALID_ACCESS_TOKEN: 'Error.INVALID_ACCESS_TOKEN',
@@ -60,5 +63,7 @@ export const CommonErrorMessages = {
 
   PERMISSION_ID_REQUIRED: 'Error.PERMISSION_ID_REQUIRED',
   PERMISSION_ID_INVALID: 'Error.PERMISSION_ID_INVALID',
+  PERMISSION_ID_MUST_BE_UNIQUE: 'Error.PERMISSION_ID_MUST_BE_UNIQUE',
+  PERMISSION_IDS_NOT_FOUND: (ids: PermissionModel['id'][]) => `Error.PERMISSION_IDS_NOT_FOUND: ${ids.join(', ')}`,
   PERMISSION_METHOD_INVALID: 'Error.PERMISSION_METHOD_INVALID',
 } as const
