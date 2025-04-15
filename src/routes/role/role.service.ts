@@ -14,8 +14,13 @@ import {
   RoleParam,
   UpdateRoleBody,
 } from 'src/routes/role/role.model'
+import {
+  AdminRoleEditForbiddenException,
+  BaseRoleDeletionForbiddenException,
+  RoleAlreadyExistsException,
+} from 'src/routes/role/role.error'
 import { RoleRepository } from 'src/routes/role/role.repo'
-import { RoleAlreadyExistsException } from 'src/routes/role/role.error'
+import { RoleName } from 'src/shared/constants/role.constant'
 
 @Injectable()
 export class RoleService {
@@ -57,6 +62,17 @@ export class RoleService {
     const { userId, description, isActive, name, permissionIds } = payload
 
     try {
+      const role = await this.roleRepository.findById(id)
+
+      if (!role) {
+        throw RoleNotFoundException
+      }
+
+      // Do not allow anyone to update the ADMIN role
+      if (role.name === RoleName.Admin) {
+        throw AdminRoleEditForbiddenException
+      }
+
       if (permissionIds && permissionIds.length > 0) {
         const existingPermissionIds = await this.permissionRepository.listExistingIds(permissionIds)
         const existingPermissionSet = new Set(existingPermissionIds)
@@ -81,6 +97,19 @@ export class RoleService {
 
   async delete(id: RoleParam['id'], userId: AccessTokenPayload['userId'], isHard: boolean = false): Promise<void> {
     try {
+      const role = await this.roleRepository.findById(id)
+
+      if (!role) {
+        throw RoleNotFoundException
+      }
+
+      const baseRoles: Array<string> = [RoleName.Admin, RoleName.Seller, RoleName.Client]
+
+      // Do not allow anyone to delete the ADMIN, SELLER, CLIENT roles
+      if (baseRoles.includes(role.name)) {
+        throw BaseRoleDeletionForbiddenException
+      }
+
       await this.roleRepository.delete(id, userId, isHard)
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
