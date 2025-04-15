@@ -21,7 +21,7 @@ export const CreatePermissionBodySchema = z
       .string({
         invalid_type_error: ErrorMessages.PERMISSION_DESCRIPTION_INVALID,
       })
-      .optional(),
+      .default(''),
     path: z
       .string({
         required_error: ErrorMessages.PERMISSION_PATH_REQUIRED,
@@ -29,6 +29,12 @@ export const CreatePermissionBodySchema = z
       })
       .max(1000, ErrorMessages.PERMISSION_PATH_TOO_LONG),
     method: permissionMethodSchema,
+    module: z
+      .string({
+        invalid_type_error: ErrorMessages.PERMISSION_MODULE_INVALID,
+      })
+      .max(500, ErrorMessages.PERMISSION_MODULE_TOO_LONG)
+      .default(''),
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
@@ -41,6 +47,8 @@ export const PermissionParamSchema = z
 export const GetPermissionDataResSchema = PermissionModelSchema.omit({
   deletedById: true,
   deletedAt: true,
+  createdById: true,
+  updatedById: true,
 })
 
 export const GetPermissionsQuerySchema = z

@@ -32,6 +32,7 @@ export const PermissionModelSchema = z.object({
   description: z.string(),
   path: z.string().max(1000),
   method: permissionMethodSchema,
+  module: z.string().max(500),
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
   createdAt: z.date(),

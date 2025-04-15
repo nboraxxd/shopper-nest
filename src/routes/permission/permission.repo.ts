@@ -25,7 +25,7 @@ export class PermissionRepository {
       }),
       this.prismaService.permission.findMany({
         where: { deletedAt: null },
-        omit: { deletedAt: true, deletedById: true },
+        omit: { deletedAt: true, deletedById: true, createdById: true, updatedById: true },
         skip,
         take,
       }),
@@ -49,26 +49,25 @@ export class PermissionRepository {
     })
   }
 
-  async create({
-    createdById,
-    method,
-    name,
-    path,
-  }: Pick<PermissionModel, 'name' | 'path' | 'method' | 'createdById'>): Promise<void> {
+  async create(
+    data: Pick<PermissionModel, 'name' | 'description' | 'path' | 'method' | 'module' | 'createdById'>
+  ): Promise<void> {
+    const { name, path, method, description, module, createdById } = data
+
     await this.prismaService.permission.create({
-      data: { name, path, method, createdById },
+      data: { name, description, path, method, module, createdById },
     })
   }
 
   async update(
     id: PermissionParam['id'],
-    data: Partial<Pick<PermissionModel, 'name' | 'path' | 'method' | 'description' | 'updatedById'>>
+    data: Partial<Pick<PermissionModel, 'name' | 'path' | 'method' | 'description' | 'module' | 'updatedById'>>
   ): Promise<void> {
-    const { name, path, method, description, updatedById } = data
+    const { name, path, method, description, module, updatedById } = data
 
     await this.prismaService.permission.update({
       where: { id, deletedAt: null },
-      data: { name, path, method, description, updatedById },
+      data: { name, path, method, description, module, updatedById },
     })
   }
 

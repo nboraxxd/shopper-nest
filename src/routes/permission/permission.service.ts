@@ -36,10 +36,10 @@ export class PermissionService {
   }
 
   async create(payload: CreatePermissionBody & { userId: AccessTokenPayload['userId'] }): Promise<void> {
-    const { name, path, method, userId } = payload
+    const { name, path, method, userId, description, module } = payload
 
     try {
-      await this.permissionRepository.create({ name, path, method, createdById: userId })
+      await this.permissionRepository.create({ name, path, method, description, module, createdById: userId })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
         throw PermissionAlreadyExistsException
@@ -52,10 +52,10 @@ export class PermissionService {
     id: PermissionParam['id'],
     payload: UpdatePermissionBody & { userId: AccessTokenPayload['userId'] }
   ): Promise<void> {
-    const { userId, description, method, name, path } = payload
+    const { userId, description, method, name, path, module } = payload
 
     try {
-      await this.permissionRepository.update(id, { name, path, method, description, updatedById: userId })
+      await this.permissionRepository.update(id, { name, path, method, description, module, updatedById: userId })
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw PermissionNotFoundException
