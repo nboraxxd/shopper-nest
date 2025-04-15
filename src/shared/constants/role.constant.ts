@@ -16,4 +16,4 @@ export const HTTPMethod = {
   HEAD: 'HEAD',
 } as const
 
-export type HTTPMethod = (typeof HTTPMethod)[keyof typeof HTTPMethod]
+export type HTTPMethodUnion = (typeof HTTPMethod)[keyof typeof HTTPMethod]

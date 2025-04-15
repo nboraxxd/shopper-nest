@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-import { HTTPMethod } from 'src/shared/constants/role.constant'
 import { CommonErrorMessages } from 'src/shared/constants/common.constant'
+import { HTTPMethod, HTTPMethodUnion } from 'src/shared/constants/role.constant'
 
 // schemas
 export const permissionIdSchema = z.coerce
@@ -42,4 +42,17 @@ export const PermissionModelSchema = z.object({
 })
 
 // types
-export type PermissionModel = z.infer<typeof PermissionModelSchema>
+export type PermissionModel = {
+  id: number
+  name: string
+  description: string
+  path: string
+  method: HTTPMethodUnion
+  module: string
+  createdById: number | null
+  updatedById: number | null
+  createdAt: Date
+  updatedAt: Date
+  deletedById: number | null
+  deletedAt: Date | null
+}

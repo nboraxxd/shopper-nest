@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from 'src/app.module'
-import { type HTTPMethod, RoleName } from 'src/shared/constants/role.constant'
+import { HTTPMethodUnion, RoleName } from 'src/shared/constants/role.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 type PermissionItem = {
   name: string
   description: string
-  method: HTTPMethod
+  method: HTTPMethodUnion
   path: string
   module: string
 }
@@ -39,7 +39,7 @@ async function bootstrap() {
     .map((layer) => {
       if (layer.route) {
         const path = layer.route?.path
-        const method = String(layer.route?.stack[0].method).toUpperCase() as HTTPMethod
+        const method = String(layer.route?.stack[0].method).toUpperCase() as HTTPMethodUnion
         const module = String(layer.route?.path.split('/')[1]).toUpperCase()
         return {
           name: `${method} ${path}`,

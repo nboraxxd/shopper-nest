@@ -12,6 +12,7 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { TwoFactorAuthService } from 'src/shared/services/2fa.service'
 import { UserRepository } from 'src/shared/repositories/user.repo'
+import { RoleRepository } from 'src/shared/repositories/role.repo'
 import { PermissionRepository } from 'src/shared/repositories/permission.repo'
 
 const sharedServices = [
@@ -23,6 +24,7 @@ const sharedServices = [
   TwoFactorAuthService,
   UserRepository,
   PermissionRepository,
+  RoleRepository,
 ]
 
 @Global()

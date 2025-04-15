@@ -10,16 +10,16 @@ import {
 } from 'src/shared/models/error.model'
 import { isJsonWebTokenError } from 'src/shared/utils/errors'
 import { AccessTokenPayload } from 'src/shared/types/jwt.type'
-import { HTTPMethod } from 'src/shared/constants/role.constant'
 import { TokenService } from 'src/shared/services/token.service'
-import { PrismaService } from 'src/shared/services/prisma.service'
+import { RoleRepository } from 'src/shared/repositories/role.repo'
+import { HTTPMethodUnion } from 'src/shared/constants/role.constant'
 import { ACCESS_TOKEN_PAYLOAD } from 'src/shared/constants/common.constant'
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
   constructor(
     private readonly tokenService: TokenService,
-    private readonly prismaService: PrismaService
+    private readonly roleRepository: RoleRepository
   ) {}
 
   private async extractAndVerifyToken(req: Request) {
@@ -45,20 +45,19 @@ export class AccessTokenGuard implements CanActivate {
   private async checkUserPermissions(accessTokenPayload: AccessTokenPayload, req: Request): Promise<void> {
     const roleId = accessTokenPayload.roleId
     const path = req.route.path
-    const method = req.method as HTTPMethod
+    const method = req.method as HTTPMethodUnion
 
-    const role = await this.prismaService.role.findUnique({
-      where: { id: roleId, deletedAt: null },
-      include: {
-        permissions: { where: { deletedAt: null, path, method } },
-      },
+    const role = await this.roleRepository.findActiveRoleById({
+      id: roleId,
+      method,
+      path,
     })
 
     if (!role) {
       throw RoleNotFoundException
     }
 
-    if (role.permissions.length === 0) {
+    if (role.permissions.length === 0 || role.isActive === false) {
       throw InsufficientPermissionException
     }
   }

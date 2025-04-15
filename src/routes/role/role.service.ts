@@ -2,25 +2,15 @@ import { Injectable } from '@nestjs/common'
 
 import { PagedResponse } from 'src/shared/types/response.type'
 import { AccessTokenPayload } from 'src/shared/types/jwt.type'
+import { GetRoleDataRes } from 'src/shared/models/role.model'
 import { PermissionRepository } from 'src/shared/repositories/permission.repo'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
 import { PermissionIdsNotFoundException, RoleNotFoundException } from 'src/shared/models/error.model'
 
-import {
-  CreateRoleBody,
-  GetRoleDataRes,
-  GetRolesDataRes,
-  GetRolesQuery,
-  RoleParam,
-  UpdateRoleBody,
-} from 'src/routes/role/role.model'
-import {
-  AdminRoleEditForbiddenException,
-  BaseRoleDeletionForbiddenException,
-  RoleAlreadyExistsException,
-} from 'src/routes/role/role.error'
 import { RoleRepository } from 'src/routes/role/role.repo'
 import { RoleName } from 'src/shared/constants/role.constant'
+import { ProhibitedBaseRoleActionException, RoleAlreadyExistsException } from 'src/routes/role/role.error'
+import { CreateRoleBody, GetRolesDataRes, GetRolesQuery, RoleParam, UpdateRoleBody } from 'src/routes/role/role.model'
 
 @Injectable()
 export class RoleService {
@@ -28,6 +18,21 @@ export class RoleService {
     private readonly roleRepository: RoleRepository,
     private readonly permissionRepository: PermissionRepository
   ) {}
+
+  private async verifyRole(id: RoleParam['id']): Promise<void> {
+    const role = await this.roleRepository.findById(id)
+
+    if (!role) {
+      throw RoleNotFoundException
+    }
+
+    const baseRoles: Array<string> = [RoleName.Admin, RoleName.Seller, RoleName.Client]
+
+    // Do not allow anyone to edit or delete the ADMIN, SELLER, CLIENT roles
+    if (baseRoles.includes(role.name)) {
+      throw ProhibitedBaseRoleActionException
+    }
+  }
 
   async list({ limit, page, isActive }: GetRolesQuery): Promise<PagedResponse<GetRolesDataRes>> {
     const result = await this.roleRepository.list({ limit, page, isActive })
@@ -62,16 +67,7 @@ export class RoleService {
     const { userId, description, isActive, name, permissionIds } = payload
 
     try {
-      const role = await this.roleRepository.findById(id)
-
-      if (!role) {
-        throw RoleNotFoundException
-      }
-
-      // Do not allow anyone to update the ADMIN role
-      if (role.name === RoleName.Admin) {
-        throw AdminRoleEditForbiddenException
-      }
+      await this.verifyRole(id)
 
       if (permissionIds && permissionIds.length > 0) {
         const existingPermissionIds = await this.permissionRepository.listExistingIds(permissionIds)
@@ -97,18 +93,7 @@ export class RoleService {
 
   async delete(id: RoleParam['id'], userId: AccessTokenPayload['userId'], isHard: boolean = false): Promise<void> {
     try {
-      const role = await this.roleRepository.findById(id)
-
-      if (!role) {
-        throw RoleNotFoundException
-      }
-
-      const baseRoles: Array<string> = [RoleName.Admin, RoleName.Seller, RoleName.Client]
-
-      // Do not allow anyone to delete the ADMIN, SELLER, CLIENT roles
-      if (baseRoles.includes(role.name)) {
-        throw BaseRoleDeletionForbiddenException
-      }
+      await this.verifyRole(id)
 
       await this.roleRepository.delete(id, userId, isHard)
     } catch (error) {

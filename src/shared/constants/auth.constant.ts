@@ -4,7 +4,7 @@ export const AuthType = {
   API_KEY: 'apiKey',
 } as const
 
-export type AuthType = (typeof AuthType)[keyof typeof AuthType]
+export type AuthTypeUnion = (typeof AuthType)[keyof typeof AuthType]
 
 export const ConditionGuard = {
   AND: 'and',

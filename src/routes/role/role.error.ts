@@ -9,6 +9,4 @@ export const RoleAlreadyExistsException = new UnprocessableEntityException({
   errors: [{ message: ErrorMessages.ROLE_ALREADY_EXISTS, path: 'path', location: 'body' }],
 })
 
-export const BaseRoleDeletionForbiddenException = new ForbiddenException(ErrorMessages.BASE_ROLE_DELETION_FORBIDDEN)
-
-export const AdminRoleEditForbiddenException = new ForbiddenException(ErrorMessages.ADMIN_ROLE_EDIT_FORBIDDEN)
+export const ProhibitedBaseRoleActionException = new ForbiddenException(ErrorMessages.PROHIBITED_BASE_ROLE_ACTION)

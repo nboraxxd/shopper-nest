@@ -18,7 +18,7 @@ export class RolesService {
       return this.clientRoleId
     }
 
-    // Truy vấn database để lấy roleId của role "client"
+    // Truy vấn database để lấy roleId của role "CLIENT"
     const response = await this.prismaService.$queryRaw<RoleModel[]>`
       SELECT * FROM "Role" WHERE name = ${RoleName.Client} AND "deletedAt" IS NULL LIMIT 1;
       `

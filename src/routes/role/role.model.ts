@@ -1,9 +1,8 @@
 import { z } from 'zod'
 
-import { RoleModelSchema } from 'src/shared/models/role.model'
+import { GetRoleDataResSchema } from 'src/shared/models/role.model'
 import { limitSchema, pageSchema } from 'src/shared/models/common.model'
 import { CommonErrorMessages } from 'src/shared/constants/common.constant'
-import { PermissionModelSchema } from 'src/shared/models/permission.model'
 
 import { ErrorMessages } from 'src/routes/role/role.constant'
 
@@ -72,22 +71,6 @@ export const GetRolesQuerySchema = z
     message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED,
   })
 
-export const GetRoleDataResSchema = RoleModelSchema.omit({
-  createdById: true,
-  updatedById: true,
-  deletedById: true,
-  deletedAt: true,
-}).extend({
-  permissions: z.array(
-    PermissionModelSchema.omit({
-      createdById: true,
-      updatedById: true,
-      deletedById: true,
-      deletedAt: true,
-    })
-  ),
-})
-
 export const GetRolesDataResSchema = z.array(GetRoleDataResSchema.omit({ permissions: true }))
 
 export type RoleParam = z.infer<typeof RoleParamSchema>
@@ -96,5 +79,4 @@ export type GetRolesQuery = z.infer<typeof GetRolesQuerySchema>
 export type CreateRoleBody = z.infer<typeof CreateRoleBodySchema>
 export type UpdateRoleBody = z.infer<typeof UpdateRoleBodySchema>
 
-export type GetRoleDataRes = z.infer<typeof GetRoleDataResSchema>
 export type GetRolesDataRes = z.infer<typeof GetRolesDataResSchema>

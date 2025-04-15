@@ -4,12 +4,12 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, HttpE
 import { APIKeyGuard } from 'src/shared/guards/api-key.guard'
 import { AccessTokenGuard } from 'src/shared/guards/access-token.guard'
 import { CommonErrorMessages } from 'src/shared/constants/common.constant'
-import { AuthType, ConditionGuard } from 'src/shared/constants/auth.constant'
+import { AuthType, AuthTypeUnion, ConditionGuard } from 'src/shared/constants/auth.constant'
 import { AUTH_TYPE_KEY, AuthTypeDecoratorPayload } from 'src/shared/decorators/auth.decorator'
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
-  private readonly authTypeGuardMap: Record<AuthType, CanActivate>
+  private readonly authTypeGuardMap: Record<AuthTypeUnion, CanActivate>
 
   constructor(
     private readonly reflector: Reflector,
