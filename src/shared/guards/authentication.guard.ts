@@ -1,5 +1,5 @@
 import { Reflector } from '@nestjs/core'
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common'
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common'
 
 import { AUTH_TYPE_KEY, AuthTypeDecoratorPayload } from 'src/shared/decorators/auth.decorator'
 import { AuthType, ConditionGuard } from 'src/shared/constants/auth.constant'
@@ -40,8 +40,10 @@ export class AuthenticationGuard implements CanActivate {
           const canActivate = await instance.canActivate(context)
 
           if (canActivate) return true
-        } catch (_error) {
-          error.message = _error.message
+        } catch (caughtError) {
+          if (!error.message) {
+            error.message = caughtError.message
+          }
         }
       }
 
@@ -55,6 +57,10 @@ export class AuthenticationGuard implements CanActivate {
             throw new UnauthorizedException('Unauthorized')
           }
         } catch (error) {
+          if (error instanceof ForbiddenException) {
+            throw error
+          }
+
           throw new UnauthorizedException(error.message)
         }
       }

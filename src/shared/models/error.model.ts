@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
@@ -25,3 +26,7 @@ export const PermissionIdsNotFoundException = (ids: PermissionModel['id'][]) =>
     message: CommonErrorMessages.GENERIC,
     errors: [{ message: CommonErrorMessages.PERMISSION_IDS_NOT_FOUND(ids), path: 'permissionIds', location: 'body' }],
   })
+
+export const RoleNotFoundException = new NotFoundException(CommonErrorMessages.ROLE_NOT_FOUND)
+
+export const InsufficientPermissionException = new ForbiddenException(CommonErrorMessages.INSUFFICIENT_PERMISSION)

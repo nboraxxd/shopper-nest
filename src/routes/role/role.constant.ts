@@ -7,7 +7,6 @@ export const SuccessMessages = {
 } as const
 
 export const ErrorMessages = {
-  ROLE_NOT_FOUND: 'Error.ROLE_NOT_FOUND',
   ROLE_ALREADY_EXISTS: 'Error.ROLE_ALREADY_EXISTS',
 
   ROLE_ID_REQUIRED: 'Error.ROLE_ID_REQUIRED',
