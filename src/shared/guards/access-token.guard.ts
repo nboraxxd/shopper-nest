@@ -30,7 +30,9 @@ export class AccessTokenGuard implements CanActivate {
     }
 
     try {
-      return this.tokenService.verifyAccessToken(accessToken)
+      const accessTokenPayload = await this.tokenService.verifyAccessToken(accessToken)
+
+      return accessTokenPayload
     } catch (error) {
       if (isJsonWebTokenError(error)) {
         throw JsonWebTokenException(error.message)
