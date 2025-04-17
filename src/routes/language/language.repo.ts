@@ -5,7 +5,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 import { GetLanguageDataRes, GetLanguagesDataRes, LanguageModel } from 'src/routes/language/language.model'
 
 @Injectable()
-export class LanguageRepesitory {
+export class LanguageRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   list(): Promise<GetLanguagesDataRes> {

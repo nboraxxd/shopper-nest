@@ -6,10 +6,10 @@ import { AuthController } from 'src/routes/auth/auth.controller'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { GoogleService } from 'src/routes/auth/google.service'
-import { AuthRepesitory } from 'src/routes/auth/auth.repo'
+import { AuthRepository } from 'src/routes/auth/auth.repo'
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, RolesService, GoogleService, TwoFactorAuthService, AuthRepesitory],
+  providers: [AuthService, RolesService, GoogleService, TwoFactorAuthService, AuthRepository],
 })
 export class AuthModule {}

@@ -45,10 +45,13 @@ export const PermissionParamSchema = z
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
 
 export const GetPermissionDataResSchema = PermissionModelSchema.omit({
+  description: true,
   deletedById: true,
   deletedAt: true,
   createdById: true,
+  createdAt: true,
   updatedById: true,
+  updatedAt: true,
 })
 
 export const GetPermissionsQuerySchema = z

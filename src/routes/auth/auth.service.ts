@@ -10,6 +10,7 @@ import { JsonWebTokenException, UserNotFoundException } from 'src/shared/models/
 import { AccessTokenPayload, AccessTokenPayloadSign, RefreshTokenPayload } from 'src/shared/types/jwt.type'
 import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
 
+import { UserService } from 'src/shared/services/user.service'
 import { TokenService } from 'src/shared/services/token.service'
 import { MailingService } from 'src/shared/services/mailing.service'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -45,8 +46,7 @@ import {
   TwoFactorAuthNotEnabledException,
 } from 'src/routes/auth/auth.error'
 import { RolesService } from 'src/routes/auth/roles.service'
-import { UserService } from 'src/shared/services/user.service'
-import { AuthRepesitory } from 'src/routes/auth/auth.repo'
+import { AuthRepository } from 'src/routes/auth/auth.repo'
 
 @Injectable()
 export class AuthService {
@@ -58,7 +58,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly twoFactorAuthService: TwoFactorAuthService,
     private readonly userRepository: UserRepository,
-    private readonly authRepository: AuthRepesitory
+    private readonly authRepository: AuthRepository
   ) {}
 
   async generateTokens({ deviceId, roleId, roleName, userId }: AccessTokenPayloadSign) {
@@ -161,7 +161,7 @@ export class AuthService {
       TypeOfVerificationCode.FORGOT_PASSWORD,
     ]
 
-    const user = await this.userRepository.findUnique({ email })
+    const user = await this.userRepository.findUnique({ email, deletedAt: null })
 
     if (type === 'REGISTER' && user) {
       throw EmailAlreadyExistsException
@@ -192,13 +192,13 @@ export class AuthService {
   }
 
   async login(payload: LoginBody & DevicePayload): Promise<LoginDataRes> {
-    const user = await this.userRepository.findUniqueIncludeRole({ email: payload.email })
+    const user = await this.userRepository.findUniqueIncludeRole({ email: payload.email, deletedAt: null })
     if (!user) {
       throw EmailOrPasswordIncorrectException('email')
     }
 
-    const isPasswordValid = await this.hashingService.compare(payload.password, user.password)
-    if (!isPasswordValid) {
+    const isPasswordCorrect = await this.hashingService.compare(payload.password, user.password)
+    if (!isPasswordCorrect) {
       throw EmailOrPasswordIncorrectException('email')
     }
 
@@ -303,7 +303,7 @@ export class AuthService {
   async forgotPassword({ code, email, password }: ForgotPasswordBody): Promise<void> {
     try {
       // Kiểm tra xem email có tồn tại và mã xác minh có hợp lệ không
-      const user = await this.userRepository.findUnique({ email })
+      const user = await this.userRepository.findUnique({ email, deletedAt: null })
 
       if (!user) {
         throw EmailDoesNotExistException
@@ -315,7 +315,7 @@ export class AuthService {
 
       // Cập nhật mật khẩu mới cho user và xóa mã xác minh
       await Promise.all([
-        this.userRepository.update({ email }, { password: hashedPassword }),
+        this.userRepository.update({ email, deletedAt: null }, { password: hashedPassword }),
         this.authRepository.deleteVerificationCode({
           email_code_type: { email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD },
         }),
@@ -331,7 +331,7 @@ export class AuthService {
   async setupTwoFactorAuth(userId: number): Promise<Setup2FADataRes> {
     try {
       // Bước 1. Kiểm tra thông tin user
-      const user = await this.userService.validateUser({ id: userId })
+      const user = await this.userService.getValidatedUser({ id: userId, deletedAt: null })
 
       // Bước 2. Kiểm tra user đã bật 2FA chưa
       if (user.totpSecret) {
@@ -342,7 +342,7 @@ export class AuthService {
       const { secret, uri } = this.twoFactorAuthService.generateTOTPSecret(user.email)
 
       // Bước 4. Lưu secret key vào db
-      await this.userRepository.update({ id: userId }, { totpSecret: secret })
+      await this.userRepository.update({ id: userId, deletedAt: null }, { totpSecret: secret })
 
       // Bước 5. Trả về secret key và uri 2FA
       return { secret, uri }
@@ -359,7 +359,7 @@ export class AuthService {
 
     try {
       // Bước 1. Kiểm tra thông tin user
-      const user = await this.userService.validateUser({ id: userId })
+      const user = await this.userService.getValidatedUser({ id: userId, deletedAt: null })
 
       // Bước 2. Kiểm tra user đã bật 2FA chưa
       if (!user.totpSecret) {
@@ -380,7 +380,7 @@ export class AuthService {
       }
 
       // Bước 4. Xóa secret key trong db
-      await this.userRepository.update({ id: userId }, { totpSecret: null })
+      await this.userRepository.update({ id: userId, deletedAt: null }, { totpSecret: null })
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw UserNotFoundException

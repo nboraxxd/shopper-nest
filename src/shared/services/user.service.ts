@@ -7,12 +7,15 @@ import { UserBlockedException, UserNotFoundException } from 'src/shared/models/e
 
 @Injectable()
 export class UserService {
-  constructor(private readonly sharedUserRepository: UserRepository) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
-  async validateUser(userIdentifier: UserIdentifier, option?: { isActiveRequired?: boolean }): Promise<UserModel> {
+  async getValidatedUser(
+    userIdentifier: UserIdentifier,
+    option?: { select?: Partial<Record<keyof UserModel, boolean>>; isActiveRequired?: boolean }
+  ): Promise<UserModel> {
     const isActiveRequired = option?.isActiveRequired ?? true
 
-    const user = await this.sharedUserRepository.findUnique(userIdentifier)
+    const user = await this.userRepository.findUnique(userIdentifier, option?.select)
 
     if (!user) {
       throw UserNotFoundException

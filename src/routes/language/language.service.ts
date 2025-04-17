@@ -11,21 +11,21 @@ import {
   GetLanguagesDataRes,
   UpdateLanguageBody,
 } from 'src/routes/language/language.model'
-import { LanguageRepesitory } from 'src/routes/language/language.repo'
+import { LanguageRepository } from 'src/routes/language/language.repo'
 import { LanguageIdAlreadyExistsException, LanguageNotFoundException } from 'src/routes/language/language.error'
 
 @Injectable()
 export class LanguageService {
-  constructor(private readonly languageRepesitory: LanguageRepesitory) {}
+  constructor(private readonly languageRepository: LanguageRepository) {}
 
   async list(): Promise<ListResponse<GetLanguagesDataRes>> {
-    const result = await this.languageRepesitory.list()
+    const result = await this.languageRepository.list()
 
     return { data: result, totalItems: result.length }
   }
 
   async findById(id: LanguageParam['id']): Promise<GetLanguageDataRes> {
-    const result = await this.languageRepesitory.findById(id)
+    const result = await this.languageRepository.findById(id)
 
     if (!result) {
       throw LanguageNotFoundException
@@ -36,7 +36,7 @@ export class LanguageService {
 
   async create({ id, name, userId }: CreateLanguageBody & { userId: AccessTokenPayload['userId'] }): Promise<void> {
     try {
-      await this.languageRepesitory.create({ id, name, createdById: userId })
+      await this.languageRepository.create({ id, name, createdById: userId })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
         throw LanguageIdAlreadyExistsException
@@ -52,7 +52,7 @@ export class LanguageService {
     const { name, userId } = payload
 
     try {
-      await this.languageRepesitory.update(id, { name, updatedById: userId })
+      await this.languageRepository.update(id, { name, updatedById: userId })
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw LanguageNotFoundException
@@ -63,7 +63,7 @@ export class LanguageService {
 
   async delete(id: LanguageParam['id']): Promise<void> {
     try {
-      await this.languageRepesitory.delete(id)
+      await this.languageRepository.delete(id)
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw LanguageNotFoundException

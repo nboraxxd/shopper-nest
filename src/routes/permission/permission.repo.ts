@@ -25,7 +25,15 @@ export class PermissionRepository {
       }),
       this.prismaService.permission.findMany({
         where: { deletedAt: null },
-        omit: { deletedAt: true, deletedById: true, createdById: true, updatedById: true },
+        omit: {
+          description: true,
+          deletedAt: true,
+          deletedById: true,
+          createdById: true,
+          createdAt: true,
+          updatedById: true,
+          updatedAt: true,
+        },
         skip,
         take,
       }),

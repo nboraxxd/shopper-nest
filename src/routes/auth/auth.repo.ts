@@ -11,7 +11,7 @@ type VerificationCodeIdentifier =
   | { email_code_type: Pick<VerificationCodeModel, 'email' | 'code' | 'type'> }
 
 @Injectable()
-export class AuthRepesitory {
+export class AuthRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async insertUserIncludeRole(

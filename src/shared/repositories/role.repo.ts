@@ -8,7 +8,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 export class RoleRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  findActiveRoleById(
+  findActiveRole(
     data: Pick<RoleModel, 'id'> & Pick<PermissionModel, 'method' | 'path'>
   ): Promise<GetRoleDataRes | null> {
     const { id, method, path } = data
@@ -19,7 +19,7 @@ export class RoleRepository {
       include: {
         permissions: {
           where: { deletedAt: null, path, method },
-          omit: { deletedAt: true, createdById: true, updatedById: true, deletedById: true },
+          select: { id: true, name: true, method: true, path: true, module: true },
         },
       },
     })

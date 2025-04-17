@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import { randomInt } from 'crypto'
 
+import { CommonErrorMessages } from 'src/shared/constants/common.constant'
+
 /**
  * @returns A random 6-digit OTP
  */
@@ -44,3 +46,23 @@ export const generatePagedResSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
       totalItems: z.number(),
     }),
   })
+
+/**
+ *
+ * @param password - The password to be validated
+ * @param confirmPassword - The password to be confirmed
+ * @param ctx - The Zod refinement context
+ * @description A custom validation function to check if the password and confirm password match.
+ * If they do not match, it adds a custom issue to the context with a specific error message.
+ * @returns void
+ * @throws {z.ZodError} If the passwords do not match, a ZodError is thrown with a custom message.
+ */
+export const validatePasswordMatch = (password: string, confirmPassword: string, ctx: z.RefinementCtx) => {
+  if (password !== confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: CommonErrorMessages.PASSWORDS_DO_NOT_MATCH,
+      path: ['confirmPassword'],
+    })
+  }
+}

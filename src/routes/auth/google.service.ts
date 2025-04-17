@@ -8,7 +8,7 @@ import { UserStatus } from 'src/shared/constants/user.constant'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { UserRepository } from 'src/shared/repositories/user.repo'
 
-import { AuthRepesitory } from 'src/routes/auth/auth.repo'
+import { AuthRepository } from 'src/routes/auth/auth.repo'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { MissingEmailFromGoogleError } from 'src/routes/auth/auth.error'
@@ -20,7 +20,7 @@ export class GoogleService {
   constructor(
     private readonly authService: AuthService,
     private readonly rolesService: RolesService,
-    private readonly authRepository: AuthRepesitory,
+    private readonly authRepository: AuthRepository,
     private readonly hashingService: HashingService,
     private readonly userRepository: UserRepository
   ) {
@@ -67,7 +67,7 @@ export class GoogleService {
         throw MissingEmailFromGoogleError
       }
 
-      let user = await this.userRepository.findUniqueIncludeRole({ email: data.email })
+      let user = await this.userRepository.findUniqueIncludeRole({ email: data.email, deletedAt: null })
 
       // Nếu user chưa tồn tại, tiến hành đăng ký user mới
       if (!user) {

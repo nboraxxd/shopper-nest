@@ -7,19 +7,10 @@ import {
   nameSchema,
   passwordSchema,
 } from 'src/shared/models/common.model'
+import { validatePasswordMatch } from 'src/shared/utils'
 import { CommonErrorMessages, TYPE_OF_VERIFICATION_CODES } from 'src/shared/constants/common.constant'
 
 import { ErrorMessages } from 'src/routes/auth/auth.constant'
-
-export const validatePasswordMatch = (password: string, confirmPassword: string, ctx: z.RefinementCtx) => {
-  if (password !== confirmPassword) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: CommonErrorMessages.PASSWORDS_DO_NOT_MATCH,
-      path: ['confirmPassword'],
-    })
-  }
-}
 
 const codeTypeSchema = z.enum(TYPE_OF_VERIFICATION_CODES, { message: ErrorMessages.INVALID_VERIFICATION_CODE_TYPE })
 
@@ -70,9 +61,7 @@ export const RegisterBodySchema = z
     code: codeSchema,
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
-  .superRefine((data, ctx) => {
-    validatePasswordMatch(data.password, data.confirmPassword, ctx)
-  })
+  .superRefine((data, ctx) => validatePasswordMatch(data.password, data.confirmPassword, ctx))
 
 export const RegisterDataResSchema = z.object({
   accessToken: z.string(),
@@ -152,9 +141,7 @@ export const ForgotPasswordBodySchema = z
     confirmPassword: passwordSchema,
   })
   .strict({ message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED })
-  .superRefine((data, ctx) => {
-    validatePasswordMatch(data.password, data.confirmPassword, ctx)
-  })
+  .superRefine((data, ctx) => validatePasswordMatch(data.password, data.confirmPassword, ctx))
 
 export const Enable2FABodySchema = z.object({
   totpCode: totpCodeSchema,

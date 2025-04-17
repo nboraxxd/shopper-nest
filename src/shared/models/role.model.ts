@@ -15,18 +15,18 @@ export const RoleModelSchema = z.object({
   deletedAt: z.date().nullable(),
 })
 
-export const GetRoleDataResSchema = RoleModelSchema.omit({
-  createdById: true,
-  updatedById: true,
-  deletedById: true,
-  deletedAt: true,
+export const GetRoleDataResSchema = RoleModelSchema.pick({
+  id: true,
+  name: true,
+  isActive: true,
 }).extend({
   permissions: z.array(
-    PermissionModelSchema.omit({
-      createdById: true,
-      updatedById: true,
-      deletedById: true,
-      deletedAt: true,
+    PermissionModelSchema.pick({
+      id: true,
+      name: true,
+      method: true,
+      path: true,
+      module: true,
     })
   ),
 })
