@@ -308,7 +308,7 @@ export class AuthService {
   async forgotPassword({ code, email, password }: ForgotPasswordBody): Promise<void> {
     try {
       // Kiểm tra sự tồn tại của email
-      await this.userService.getValidatedUser<Pick<UserModel, 'id'>>(
+      const { id: userId } = await this.userService.getValidatedUser<Pick<UserModel, 'id'>>(
         { email, deletedAt: null },
         { select: { id: true }, shouldRequireActiveUser: false, notFoundException: EmailDoesNotExistException }
       )
@@ -320,7 +320,7 @@ export class AuthService {
 
       // Cập nhật mật khẩu mới cho user và xóa mã xác minh
       await Promise.all([
-        this.userRepository.update({ email, deletedAt: null }, { password: hashedPassword }),
+        this.userRepository.update({ email, deletedAt: null }, { password: hashedPassword, updatedById: userId }),
         this.authRepository.deleteVerificationCode({
           email_code_type: { email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD },
         }),
@@ -350,7 +350,7 @@ export class AuthService {
       const { secret, uri } = this.twoFactorAuthService.generateTOTPSecret(user.email)
 
       // Bước 4. Lưu secret key vào db
-      await this.userRepository.update({ id: userId, deletedAt: null }, { totpSecret: secret })
+      await this.userRepository.update({ id: userId, deletedAt: null }, { totpSecret: secret, updatedById: userId })
 
       // Bước 5. Trả về secret key và uri 2FA
       return { secret, uri }
@@ -394,7 +394,7 @@ export class AuthService {
       }
 
       // Bước 4. Xóa secret key trong db
-      await this.userRepository.update({ id: userId, deletedAt: null }, { totpSecret: null })
+      await this.userRepository.update({ id: userId, deletedAt: null }, { totpSecret: null, updatedById: userId })
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw UserNotFoundException
