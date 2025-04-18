@@ -90,6 +90,7 @@ export type UserIdentifier =
   | Pick<UserModel, 'id' | 'deletedAt'>
   | Pick<UserModel, 'email' | 'deletedAt'>
   | Pick<UserModel, 'id' | 'deletedAt' | 'status'>
+  | Pick<UserModel, 'email' | 'deletedAt' | 'status'>
 
 export type GetUserProfileQuery = z.infer<typeof GetUserProfileQuerySchema>
 export type GetUserProfileDataRes = z.infer<typeof GetUserProfileDataResSchema>

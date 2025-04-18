@@ -7,7 +7,12 @@ import { isNotFoundPrismaError } from 'src/shared/utils/errors'
 import { UserRepository } from 'src/shared/repositories/user.repo'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { UserNotFoundException } from 'src/shared/models/error.model'
-import { GetUserProfileDataRes, GetUserProfileQuery, UpdateUserProfileDataRes } from 'src/shared/models/user.model'
+import {
+  GetUserProfileDataRes,
+  GetUserProfileQuery,
+  UpdateUserProfileDataRes,
+  UserModel,
+} from 'src/shared/models/user.model'
 
 import { PasswordIncorrectException } from 'src/routes/profile/profile.error'
 import { ChangePasswordBody, UpdateProfileBody } from 'src/routes/profile/profile.model'
@@ -66,7 +71,10 @@ export class ProfileService {
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
-        await this.userService.getValidatedUser({ id: userId, deletedAt: null })
+        await this.userService.getValidatedUser<Pick<UserModel, 'id'>>(
+          { id: userId, deletedAt: null },
+          { select: { id: true } }
+        )
       }
       throw error
     }
@@ -75,7 +83,7 @@ export class ProfileService {
   async changePassword(userId: AccessTokenPayload['userId'], data: ChangePasswordBody): Promise<void> {
     const { password, newPassword } = data
 
-    const user = await this.userService.getValidatedUser(
+    const user = await this.userService.getValidatedUser<Pick<UserModel, 'password'>>(
       { id: userId, deletedAt: null },
       { select: { password: true } }
     )

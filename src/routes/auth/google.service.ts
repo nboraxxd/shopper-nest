@@ -13,6 +13,7 @@ import { AuthService } from 'src/routes/auth/auth.service'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { MissingEmailFromGoogleError } from 'src/routes/auth/auth.error'
 import { DevicePayload, GoogleCallbackQuery } from 'src/routes/auth/auth.model'
+import { UserModel } from 'src/shared/models/user.model'
 
 @Injectable()
 export class GoogleService {
@@ -67,7 +68,10 @@ export class GoogleService {
         throw MissingEmailFromGoogleError
       }
 
-      let user = await this.userRepository.findUniqueIncludeRole({ email: data.email, deletedAt: null })
+      let user = await this.userRepository.findUniqueIncludeRole<Pick<UserModel, 'id'>>(
+        { email: data.email, deletedAt: null },
+        { id: true }
+      )
 
       // Nếu user chưa tồn tại, tiến hành đăng ký user mới
       if (!user) {
@@ -94,7 +98,7 @@ export class GoogleService {
 
       const { accessToken, refreshToken } = await this.authService.generateTokens({
         deviceId: device.id,
-        roleId: user.roleId,
+        roleId: user.role.id,
         roleName: user.role.name,
         userId: user.id,
       })

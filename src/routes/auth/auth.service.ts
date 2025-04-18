@@ -47,6 +47,7 @@ import {
 } from 'src/routes/auth/auth.error'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
+import { UserModel } from 'src/shared/models/user.model'
 
 @Injectable()
 export class AuthService {
@@ -61,7 +62,9 @@ export class AuthService {
     private readonly authRepository: AuthRepository
   ) {}
 
-  async generateTokens({ deviceId, roleId, roleName, userId }: AccessTokenPayloadSign) {
+  async generateTokens(payload: AccessTokenPayloadSign): Promise<{ accessToken: string; refreshToken: string }> {
+    const { deviceId, roleId, roleName, userId } = payload
+
     const [accessToken, refreshToken] = await Promise.all([
       this.tokenService.signAccessToken({ deviceId, roleId, roleName, userId }),
       this.tokenService.signRefreshToken({ userId }),
@@ -70,7 +73,7 @@ export class AuthService {
     return { accessToken, refreshToken }
   }
 
-  async saveRefreshToken({ deviceId, token }: { token: string; deviceId: number }) {
+  async saveRefreshToken({ deviceId, token }: { token: string; deviceId: number }): Promise<void> {
     const { exp, userId } = this.tokenService.decodeToken<RefreshTokenPayload>(token)
 
     try {
@@ -88,11 +91,11 @@ export class AuthService {
     }
   }
 
-  async verifyVerificationCode({
-    email,
-    code,
-    type,
-  }: Pick<VerificationCodeModel, 'code' | 'email' | 'type'>): Promise<VerificationCodeModel> {
+  async verifyVerificationCode(
+    data: Pick<VerificationCodeModel, 'code' | 'email' | 'type'>
+  ): Promise<Pick<VerificationCodeModel, 'id' | 'email' | 'code' | 'type' | 'expiresAt'>> {
+    const { email, code, type } = data
+
     const verificationModel = await this.authRepository.findUniqueVerificationCode({
       email_code_type: { email, code, type },
     })
@@ -138,7 +141,7 @@ export class AuthService {
 
       const tokens = await this.generateTokens({
         deviceId: device.id,
-        roleId: user.roleId,
+        roleId: user.role.id,
         roleName: user.role.name,
         userId: user.id,
       })
@@ -161,9 +164,9 @@ export class AuthService {
       TypeOfVerificationCode.FORGOT_PASSWORD,
     ]
 
-    const user = await this.userRepository.findUnique({ email, deletedAt: null })
+    const user = await this.userRepository.findUnique<Pick<UserModel, 'id'>>({ email, deletedAt: null }, { id: true })
 
-    if (type === 'REGISTER' && user) {
+    if (type === TypeOfVerificationCode.REGISTER && user) {
       throw EmailAlreadyExistsException
     } else if (essentialUserExistenceChecks.includes(type as (typeof essentialUserExistenceChecks)[number]) && !user) {
       throw EmailDoesNotExistException
@@ -192,7 +195,10 @@ export class AuthService {
   }
 
   async login(payload: LoginBody & DevicePayload): Promise<LoginDataRes> {
-    const user = await this.userRepository.findUniqueIncludeRole({ email: payload.email, deletedAt: null })
+    const user = await this.userRepository.findUniqueIncludeRole<Pick<UserModel, 'id' | 'password' | 'totpSecret'>>(
+      { email: payload.email, deletedAt: null },
+      { id: true, password: true, totpSecret: true }
+    )
     if (!user) {
       throw EmailOrPasswordIncorrectException('email')
     }
@@ -214,7 +220,7 @@ export class AuthService {
         }
       } else if (payload.code) {
         await this.verifyVerificationCode({
-          email: user.email,
+          email: payload.email,
           code: payload.code,
           type: TypeOfVerificationCode.LOGIN,
         })
@@ -233,7 +239,7 @@ export class AuthService {
 
     const tokens = await this.generateTokens({
       deviceId: device.id,
-      roleId: user.roleId,
+      roleId: user.role.id,
       roleName: user.role.name,
       userId: user.id,
     })
@@ -258,8 +264,7 @@ export class AuthService {
       const {
         deviceId,
         user: {
-          roleId,
-          role: { name: roleName },
+          role: { name: roleName, id: roleId },
         },
       } = refreshTokenInDb
 
@@ -302,13 +307,13 @@ export class AuthService {
 
   async forgotPassword({ code, email, password }: ForgotPasswordBody): Promise<void> {
     try {
-      // Kiểm tra xem email có tồn tại và mã xác minh có hợp lệ không
-      const user = await this.userRepository.findUnique({ email, deletedAt: null })
+      // Kiểm tra sự tồn tại của email
+      await this.userService.getValidatedUser<Pick<UserModel, 'id'>>(
+        { email, deletedAt: null },
+        { select: { id: true }, shouldRequireActiveUser: false, notFoundException: EmailDoesNotExistException }
+      )
 
-      if (!user) {
-        throw EmailDoesNotExistException
-      }
-
+      // Kiểm tra mã xác minh
       await this.verifyVerificationCode({ email, code, type: TypeOfVerificationCode.FORGOT_PASSWORD })
 
       const hashedPassword = await this.hashingService.hash(password)
@@ -331,7 +336,10 @@ export class AuthService {
   async setupTwoFactorAuth(userId: number): Promise<Setup2FADataRes> {
     try {
       // Bước 1. Kiểm tra thông tin user
-      const user = await this.userService.getValidatedUser({ id: userId, deletedAt: null })
+      const user = await this.userService.getValidatedUser<Pick<UserModel, 'email' | 'totpSecret'>>(
+        { id: userId, deletedAt: null },
+        { select: { email: true, totpSecret: true } }
+      )
 
       // Bước 2. Kiểm tra user đã bật 2FA chưa
       if (user.totpSecret) {
@@ -359,7 +367,13 @@ export class AuthService {
 
     try {
       // Bước 1. Kiểm tra thông tin user
-      const user = await this.userService.getValidatedUser({ id: userId, deletedAt: null })
+      const user = await this.userService.getValidatedUser<Pick<UserModel, 'email' | 'totpSecret'>>(
+        {
+          id: userId,
+          deletedAt: null,
+        },
+        { select: { email: true, totpSecret: true } }
+      )
 
       // Bước 2. Kiểm tra user đã bật 2FA chưa
       if (!user.totpSecret) {

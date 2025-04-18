@@ -16,7 +16,7 @@ export class AuthRepository {
 
   async insertUserIncludeRole(
     user: Pick<UserModel, 'email' | 'name' | 'password' | 'roleId' | 'status'> & Partial<Pick<UserModel, 'avatar'>>
-  ): Promise<UserModel & { role: RoleModel }> {
+  ): Promise<Pick<UserModel, 'id' | 'email' | 'name' | 'status'> & { role: Pick<RoleModel, 'id' | 'name'> }> {
     const { email, name, password, avatar, roleId, status } = user
 
     return this.prismaService.user.create({
@@ -28,7 +28,13 @@ export class AuthRepository {
         roleId,
         status,
       },
-      include: { role: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        status: true,
+        role: { select: { id: true, name: true } },
+      },
     })
   }
 
@@ -44,8 +50,13 @@ export class AuthRepository {
     })
   }
 
-  findUniqueVerificationCode(where: VerificationCodeIdentifier): Promise<VerificationCodeModel | null> {
-    return this.prismaService.verificationCode.findUnique({ where })
+  findUniqueVerificationCode(
+    where: VerificationCodeIdentifier
+  ): Promise<Pick<VerificationCodeModel, 'id' | 'email' | 'code' | 'type' | 'expiresAt'> | null> {
+    return this.prismaService.verificationCode.findUnique({
+      where,
+      select: { id: true, email: true, code: true, type: true, expiresAt: true },
+    })
   }
 
   async deleteVerificationCode(where: VerificationCodeIdentifier): Promise<void> {
@@ -81,12 +92,20 @@ export class AuthRepository {
     })
   }
 
-  async findUniqueRefreshTokenIncludeUserRole(
-    where: Pick<RefreshTokenModel, 'token'>
-  ): Promise<(RefreshTokenModel & { user: UserModel & { role: RoleModel } }) | null> {
+  async findUniqueRefreshTokenIncludeUserRole(where: Pick<RefreshTokenModel, 'token'>): Promise<
+    | (Pick<RefreshTokenModel, 'deviceId' | 'createdAt' | 'expiresAt'> & {
+        user: { role: Pick<RoleModel, 'id' | 'name'> }
+      })
+    | null
+  > {
     return this.prismaService.refreshToken.findUnique({
       where,
-      include: { user: { include: { role: true } } },
+      select: {
+        user: { select: { role: { select: { id: true, name: true } } } },
+        deviceId: true,
+        createdAt: true,
+        expiresAt: true,
+      },
     })
   }
 
@@ -94,7 +113,7 @@ export class AuthRepository {
     return this.prismaService.device.update({ where: { id }, data })
   }
 
-  async deleteRefreshToken(token: string): Promise<RefreshTokenModel> {
-    return this.prismaService.refreshToken.delete({ where: { token } })
+  async deleteRefreshToken(token: string): Promise<Pick<RefreshTokenModel, 'deviceId'>> {
+    return this.prismaService.refreshToken.delete({ where: { token }, select: { deviceId: true } })
   }
 }
