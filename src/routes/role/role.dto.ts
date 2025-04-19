@@ -1,10 +1,10 @@
 import { createZodDto } from 'nestjs-zod'
 
-import { GetRoleDataResSchema } from 'src/shared/models/role.model'
 import { generatePagedResSchema, generateResSchema } from 'src/shared/utils'
 
 import {
   CreateRoleBodySchema,
+  GetRoleDataResSchema,
   GetRolesDataResSchema,
   GetRolesQuerySchema,
   RoleParamSchema,

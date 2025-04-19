@@ -47,7 +47,7 @@ export class AccessTokenGuard implements CanActivate {
     const path = req.route.path
     const method = req.method as HTTPMethodUnion
 
-    const role = await this.roleRepository.findActiveRole({
+    const role = await this.roleRepository.findRoleWithPermission({
       id: roleId,
       method,
       path,

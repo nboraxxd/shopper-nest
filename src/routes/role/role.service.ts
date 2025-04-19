@@ -2,15 +2,21 @@ import { Injectable } from '@nestjs/common'
 
 import { PagedResponse } from 'src/shared/types/response.type'
 import { AccessTokenPayload } from 'src/shared/types/jwt.type'
-import { GetRoleDataRes } from 'src/shared/models/role.model'
 import { PermissionRepository } from 'src/shared/repositories/permission.repo'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/utils/errors'
 import { PermissionIdsNotFoundException, RoleNotFoundException } from 'src/shared/models/error.model'
 
+import {
+  CreateRoleBody,
+  GetRoleDataRes,
+  GetRolesDataRes,
+  GetRolesQuery,
+  RoleParam,
+  UpdateRoleBody,
+} from 'src/routes/role/role.model'
 import { RoleRepository } from 'src/routes/role/role.repo'
 import { RoleName } from 'src/shared/constants/role.constant'
 import { ProhibitedBaseRoleActionException, RoleAlreadyExistsException } from 'src/routes/role/role.error'
-import { CreateRoleBody, GetRolesDataRes, GetRolesQuery, RoleParam, UpdateRoleBody } from 'src/routes/role/role.model'
 
 @Injectable()
 export class RoleService {

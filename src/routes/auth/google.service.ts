@@ -4,25 +4,25 @@ import { Injectable } from '@nestjs/common'
 import { OAuth2Client } from 'google-auth-library'
 
 import envConfig from 'src/shared/env-config'
+import { UserModel } from 'src/shared/models/user.model'
 import { UserStatus } from 'src/shared/constants/user.constant'
 import { HashingService } from 'src/shared/services/hashing.service'
+import { RoleRepository } from 'src/shared/repositories/role.repo'
 import { UserRepository } from 'src/shared/repositories/user.repo'
 
 import { AuthRepository } from 'src/routes/auth/auth.repo'
 import { AuthService } from 'src/routes/auth/auth.service'
-import { RolesService } from 'src/routes/auth/roles.service'
 import { MissingEmailFromGoogleError } from 'src/routes/auth/auth.error'
 import { DevicePayload, GoogleCallbackQuery } from 'src/routes/auth/auth.model'
-import { UserModel } from 'src/shared/models/user.model'
 
 @Injectable()
 export class GoogleService {
   private oauth2Client: OAuth2Client
   constructor(
     private readonly authService: AuthService,
-    private readonly rolesService: RolesService,
-    private readonly authRepository: AuthRepository,
     private readonly hashingService: HashingService,
+    private readonly roleRepository: RoleRepository,
+    private readonly authRepository: AuthRepository,
     private readonly userRepository: UserRepository
   ) {
     this.oauth2Client = new google.auth.OAuth2(
@@ -75,7 +75,7 @@ export class GoogleService {
 
       // Nếu user chưa tồn tại, tiến hành đăng ký user mới
       if (!user) {
-        const clientRoleId = await this.rolesService.getClientRoleId()
+        const clientRoleId = await this.roleRepository.getClientRoleId()
 
         const randomPassword = uuidv4()
         const hashedPassword = await this.hashingService.hash(randomPassword)

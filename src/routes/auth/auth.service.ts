@@ -45,9 +45,9 @@ import {
   TwoFactorAuthAlreadyEnabledException,
   TwoFactorAuthNotEnabledException,
 } from 'src/routes/auth/auth.error'
-import { RolesService } from 'src/routes/auth/roles.service'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
 import { UserModel } from 'src/shared/models/user.model'
+import { RoleRepository } from 'src/shared/repositories/role.repo'
 
 @Injectable()
 export class AuthService {
@@ -55,8 +55,8 @@ export class AuthService {
     private readonly mailingService: MailingService,
     private readonly hashingService: HashingService,
     private readonly tokenService: TokenService,
-    private readonly rolesService: RolesService,
     private readonly userService: UserService,
+    private readonly roleRepository: RoleRepository,
     private readonly twoFactorAuthService: TwoFactorAuthService,
     private readonly userRepository: UserRepository,
     private readonly authRepository: AuthRepository
@@ -117,7 +117,7 @@ export class AuthService {
     try {
       await this.verifyVerificationCode({ email, code, type: TypeOfVerificationCode.REGISTER })
 
-      const clientRoleId = await this.rolesService.getClientRoleId()
+      const clientRoleId = await this.roleRepository.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(password)
 
       const [user] = await Promise.all([

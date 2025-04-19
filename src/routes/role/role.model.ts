@@ -1,8 +1,9 @@
 import { z } from 'zod'
 
-import { GetRoleDataResSchema } from 'src/shared/models/role.model'
+import { RoleModelSchema } from 'src/shared/models/role.model'
 import { limitSchema, pageSchema } from 'src/shared/models/common.model'
 import { CommonErrorMessages } from 'src/shared/constants/common.constant'
+import { PermissionModelSchema } from 'src/shared/models/permission.model'
 
 import { ErrorMessages } from 'src/routes/role/role.constant'
 
@@ -71,6 +72,22 @@ export const GetRolesQuerySchema = z
     message: CommonErrorMessages.ADDITIONAL_PROPERTIES_NOT_ALLOWED,
   })
 
+export const GetRoleDataResSchema = RoleModelSchema.pick({
+  id: true,
+  name: true,
+  isActive: true,
+}).extend({
+  permissions: z.array(
+    PermissionModelSchema.pick({
+      id: true,
+      name: true,
+      method: true,
+      path: true,
+      module: true,
+    })
+  ),
+})
+
 export const GetRolesDataResSchema = z.array(GetRoleDataResSchema.omit({ permissions: true }))
 
 export type RoleParam = z.infer<typeof RoleParamSchema>
@@ -80,3 +97,4 @@ export type CreateRoleBody = z.infer<typeof CreateRoleBodySchema>
 export type UpdateRoleBody = z.infer<typeof UpdateRoleBodySchema>
 
 export type GetRolesDataRes = z.infer<typeof GetRolesDataResSchema>
+export type GetRoleDataRes = z.infer<typeof GetRoleDataResSchema>
